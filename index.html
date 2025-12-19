@@ -1,104 +1,136 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <title>FreshwaterSalmon's Playground</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FreshwaterSalmon's Playground</title>
+<style>
+  /* --- 기본 스타일 --- */
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(to bottom, #A0E7E5, #B4F8C8); /* 물 + 산뜻한 느낌 */
+    color: #034748; /* 어두운 물 색 */
+  }
 
-  <style>
-    :root {
-      --main: #006F86;
-      --sub: #00A3A3;
-      --bg: #f4fbfc;
-      --text: #03343d;
-    }
+  /* --- 첫 화면 --- */
+  #welcomeScreen {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    text-align: center;
+  }
 
-    * {
-      box-sizing: border-box;
-      font-family: "Pretendard", "Apple SD Gothic Neo", sans-serif;
-    }
+  #welcomeScreen h1 {
+    font-size: 3em;
+    margin-bottom: 20px;
+  }
 
-    body {
-      margin: 0;
-      height: 100vh;
-      background: linear-gradient(135deg, var(--bg), #ffffff);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      color: var(--text);
-    }
+  #enterBtn {
+    padding: 15px 30px;
+    font-size: 1.2em;
+    background-color: #FF7F50; /* 연어색 */
+    border: none;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: 0.3s;
+  }
 
-    .card {
-      background: white;
-      padding: 48px 40px;
-      border-radius: 20px;
-      width: min(90%, 420px);
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-      text-align: center;
-      animation: fadeUp 1s ease;
-    }
+  #enterBtn:hover {
+    background-color: #FF9478;
+  }
 
-    h1 {
-      margin: 0 0 12px;
-      font-size: 26px;
-      color: var(--main);
-    }
+  /* --- 게임 화면 --- */
+  #gameScreen {
+    display: none;
+    padding: 20px;
+    text-align: center;
+  }
 
-    p {
-      margin: 0 0 28px;
-      line-height: 1.6;
-      font-size: 15px;
-    }
+  #gameScreen h2 {
+    font-size: 2em;
+    margin-bottom: 20px;
+  }
 
-    .btn {
-      display: inline-block;
-      padding: 12px 28px;
-      border-radius: 999px;
-      background: linear-gradient(135deg, var(--main), var(--sub));
-      color: white;
-      text-decoration: none;
-      font-weight: 600;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
+  #gameContainer {
+    position: relative;
+    width: 90%;
+    max-width: 800px;
+    height: 400px;
+    margin: 0 auto;
+    background-color: #D0F0FD; /* 물 느낌 */
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(0,0,0,0.2);
+  }
 
-    .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 20px rgba(0, 111, 134, 0.35);
-    }
+  .salmon {
+    position: absolute;
+    width: 60px;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
 
-    footer {
-      margin-top: 24px;
-      font-size: 12px;
-      color: #6c9aa3;
-    }
+  .salmon:hover {
+    transform: scale(1.2);
+  }
 
-    @keyframes fadeUp {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-  </style>
+  #message {
+    margin-top: 20px;
+    font-size: 1.5em;
+    color: #FF4500; /* 눈에 띄는 색 */
+  }
+</style>
 </head>
-
 <body>
-  <div class="card">
-    <h1>🐟 민물연어's Playground </h1>
-    <p>
-      민물연어의 놀이터에 오신 것을 환영합니다!<br />
-      이곳은 민솔이와 연아의 추억 저장소가 될 예정입니다.
-      부디 재밌게 놀다 가시길"[♥]"
-    </p>
 
-    <a href="#" class="btn">들어가기</a>
+<!-- --- 첫 화면 --- -->
+<div id="welcomeScreen">
+  <h1>FreshwaterSalmon's Playground에 오신 것을 환영합니다!</h1>
+  <button id="enterBtn">들어가기</button>
+</div>
 
-    <footer>
-      © 2025 FreshwaterSalmon
-    </footer>
-  </div>
+<!-- --- 게임 화면 --- -->
+<div id="gameScreen">
+  <h2>숨은 연어를 찾아보세요! 🐟</h2>
+  <div id="gameContainer"></div>
+  <div id="message"></div>
+</div>
+
+<script>
+  const enterBtn = document.getElementById('enterBtn');
+  const welcomeScreen = document.getElementById('welcomeScreen');
+  const gameScreen = document.getElementById('gameScreen');
+  const gameContainer = document.getElementById('gameContainer');
+  const message = document.getElementById('message');
+
+  enterBtn.addEventListener('click', () => {
+    welcomeScreen.style.display = 'none';
+    gameScreen.style.display = 'block';
+    startGame();
+  });
+
+  function startGame() {
+    const totalSalmon = 5; // 숨은 연어 개수
+    for (let i = 0; i < totalSalmon; i++) {
+      const img = document.createElement('img');
+      img.src = 'https://i.imgur.com/4AiXzf8.png'; // 연어 이미지 URL (예시)
+      img.classList.add('salmon');
+      img.style.top = Math.random() * (gameContainer.clientHeight - 60) + 'px';
+      img.style.left = Math.random() * (gameContainer.clientWidth - 60) + 'px';
+      img.addEventListener('click', () => {
+        img.remove();
+        message.textContent = `연어를 찾았어요! ${totalSalmon - gameContainer.querySelectorAll('.salmon').length} 마리 남음`;
+        if (gameContainer.querySelectorAll('.salmon').length === 0) {
+          message.textContent = '🎉 모든 연어를 찾았어요! 🎉';
+        }
+      });
+      gameContainer.appendChild(img);
+    }
+  }
+</script>
+
 </body>
 </html>
