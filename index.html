@@ -1,1 +1,103 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>FreshwaterSalmon's Playground</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <style>
+    :root {
+      --main: #006F86;
+      --sub: #00A3A3;
+      --bg: #f4fbfc;
+      --text: #03343d;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: "Pretendard", "Apple SD Gothic Neo", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      height: 100vh;
+      background: linear-gradient(135deg, var(--bg), #ffffff);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: var(--text);
+    }
+
+    .card {
+      background: white;
+      padding: 48px 40px;
+      border-radius: 20px;
+      width: min(90%, 420px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      animation: fadeUp 1s ease;
+    }
+
+    h1 {
+      margin: 0 0 12px;
+      font-size: 26px;
+      color: var(--main);
+    }
+
+    p {
+      margin: 0 0 28px;
+      line-height: 1.6;
+      font-size: 15px;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 12px 28px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--main), var(--sub));
+      color: white;
+      text-decoration: none;
+      font-weight: 600;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(0, 111, 134, 0.35);
+    }
+
+    footer {
+      margin-top: 24px;
+      font-size: 12px;
+      color: #6c9aa3;
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <h1>🐟 FreshwaterSalmon's Playground</h1>
+    <p>
+      FreshwaterSalmon의 놀이터에 오신 것을 환영합니다!<br />
+      실험적인 아이디어, 작은 프로젝트, 그리고 재미있는 웹 시도들이 모이는 공간이에요.
+    </p>
+
+    <a href="#" class="btn">들어가기</a>
+
+    <footer>
+      © 2025 FreshwaterSalmon
+    </footer>
+  </div>
+</body>
+</html>
