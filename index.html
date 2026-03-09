@@ -1,1 +1,483 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ResumeAI — AI 이력서 빌더</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@400;500&family=Pretendard:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080810;
+    --card: #0F0F1A;
+    --border: #1A1A2E;
+    --accent: #7C6EFF;
+    --accent2: #FF6BCD;
+    --text: #EEEEFF;
+    --sub: #7070A0;
+    --input-bg: #060610;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Pretendard', 'Segoe UI', sans-serif; min-height: 100vh; }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #2A2A40; border-radius: 4px; }
 
+  .header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 28px; border-bottom: 1px solid var(--border);
+    background: var(--card); position: sticky; top: 0; z-index: 100;
+  }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-icon { width: 34px; height: 34px; border-radius: 9px; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .logo-text { font-size: 17px; font-weight: 800; letter-spacing: -0.5px; }
+  .logo-sub { font-size: 10px; color: var(--sub); letter-spacing: 1.5px; text-transform: uppercase; }
+  .tab-group { display: flex; gap: 6px; }
+  .tab { padding: 7px 18px; border-radius: 20px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; font-family: inherit; }
+  .tab.active { background: var(--accent); color: #fff; }
+  .tab:not(.active) { background: transparent; color: var(--sub); }
+
+  .layout { display: grid; grid-template-columns: 380px 1fr; min-height: calc(100vh - 65px); }
+  .panel { background: var(--card); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+  .panel-inner { flex: 1; overflow-y: auto; padding: 0 22px 22px; }
+  .steps-nav { padding: 20px 22px 0; }
+  .step-dots { display: flex; gap: 6px; margin-bottom: 20px; }
+  .step-dot { flex: 1; height: 4px; border-radius: 4px; cursor: pointer; transition: all 0.3s; border: none; }
+  .step-dot.done { background: var(--accent); opacity: 0.4; }
+  .step-dot.active { background: var(--accent); }
+  .step-dot.todo { background: var(--border); }
+  .step-title { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+  .step-desc { font-size: 12px; color: var(--sub); margin-bottom: 20px; line-height: 1.5; }
+
+  .field { margin-bottom: 13px; }
+  label { font-size: 11px; color: var(--sub); font-weight: 600; letter-spacing: 0.5px; display: block; margin-bottom: 5px; text-transform: uppercase; }
+  input, textarea {
+    width: 100%; background: var(--input-bg); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); padding: 10px 13px;
+    font-size: 14px; outline: none; font-family: inherit; transition: border-color 0.2s;
+  }
+  input:focus, textarea:focus { border-color: var(--accent); }
+  input::placeholder, textarea::placeholder { color: #333348; }
+  textarea { resize: none; }
+
+  .exp-card { background: var(--input-bg); border-radius: 10px; padding: 14px; margin-bottom: 10px; border: 1px solid var(--border); }
+  .exp-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .exp-card-label { font-size: 11px; color: var(--sub); font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+  .del-btn { background: none; border: none; color: #FF5566; cursor: pointer; font-size: 12px; font-family: inherit; }
+  .add-btn { width: 100%; padding: 10px; border: 1px dashed rgba(124,110,255,0.4); border-radius: 8px; background: transparent; color: var(--accent); cursor: pointer; font-size: 13px; font-family: inherit; transition: all 0.2s; }
+  .add-btn:hover { background: rgba(124,110,255,0.07); }
+  .section-group-title { font-size: 12px; font-weight: 700; color: var(--accent); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid rgba(124,110,255,0.2); }
+
+  .template-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .template-btn { border: 2px solid var(--border); border-radius: 10px; padding: 12px 10px; background: var(--input-bg); cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; font-family: inherit; }
+  .template-btn.active { border-color: var(--accent); background: rgba(124,110,255,0.1); }
+  .template-swatch { width: 26px; height: 26px; border-radius: 5px; flex-shrink: 0; }
+  .template-name { font-size: 13px; font-weight: 500; color: var(--sub); }
+  .template-btn.active .template-name { color: var(--accent); font-weight: 700; }
+
+  .btn-ai { width: 100%; padding: 14px; border-radius: 10px; border: none; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; margin-bottom: 10px; transition: opacity 0.2s; }
+  .btn-ai:hover { opacity: 0.9; }
+  .btn-ai:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-outline { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--input-bg); color: var(--text); font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; margin-bottom: 8px; transition: all 0.2s; }
+  .btn-outline:hover { border-color: var(--accent); }
+
+  .ai-success { background: rgba(124,110,255,0.1); border: 1px solid rgba(124,110,255,0.3); border-radius: 10px; padding: 14px; margin-bottom: 10px; display: none; }
+  .ai-success.show { display: block; animation: fadeUp 0.4s ease; }
+  .ai-success-title { font-size: 12px; color: var(--accent); font-weight: 700; margin-bottom: 6px; }
+  .ai-success-text { font-size: 12px; color: var(--sub); line-height: 1.7; }
+
+  .panel-nav { padding: 14px 22px; border-top: 1px solid var(--border); display: flex; gap: 8px; }
+  .nav-prev { flex: 1; padding: 11px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--sub); cursor: pointer; font-size: 14px; font-family: inherit; }
+  .nav-next { flex: 2; padding: 11px; border-radius: 8px; border: none; background: var(--accent); color: #fff; cursor: pointer; font-size: 14px; font-weight: 700; font-family: inherit; }
+
+  .preview-area { padding: 28px; overflow-y: auto; background: var(--bg); }
+  .preview-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+  .preview-label { font-size: 12px; color: var(--sub); }
+  .template-quick { display: flex; gap: 6px; }
+  .tq-btn { width: 22px; height: 22px; border-radius: 4px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; }
+  .tq-btn.active { border-color: var(--accent) !important; }
+
+  .resume-card { border-radius: 12px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+  .resume-accent-bar { height: 4px; }
+  .resume-inner { padding: 36px 40px; }
+  .resume-name { font-size: 26px; font-weight: 800; margin-bottom: 4px; }
+  .resume-title-row { font-size: 13px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 10px; }
+  .resume-contacts { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; margin-bottom: 28px; }
+  .resume-section { margin-bottom: 22px; }
+  .section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .section-ttl { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+  .section-line { flex: 1; height: 1px; }
+  .exp-item { margin-bottom: 14px; }
+  .exp-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 3px; }
+  .exp-company { font-size: 14px; font-weight: 700; }
+  .exp-role-txt { font-size: 12px; margin-bottom: 4px; }
+  .exp-period { font-size: 11px; white-space: nowrap; }
+  .exp-desc { font-size: 12px; line-height: 1.7; }
+  .edu-item { display: flex; justify-content: space-between; margin-bottom: 8px; }
+  .skill-tags { display: flex; flex-wrap: wrap; gap: 7px; }
+  .skill-tag { border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 500; }
+  .link-row { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; }
+
+  .portfolio-card { margin-top: 22px; background: var(--card); border-radius: 12px; border: 1px solid var(--border); padding: 32px; animation: fadeUp 0.4s ease; }
+  .portfolio-tag { font-size: 10px; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; font-weight: 700; margin-bottom: 14px; }
+  .portfolio-name { font-size: 34px; font-weight: 800; margin-bottom: 8px; background: linear-gradient(135deg, var(--text), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-family: 'Instrument Serif', Georgia, serif; }
+  .portfolio-subtitle { font-size: 15px; color: var(--sub); margin-bottom: 22px; }
+  .portfolio-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+  .portfolio-item { background: var(--input-bg); border-radius: 10px; padding: 18px 14px; text-align: center; border: 1px solid var(--border); }
+  .portfolio-item-icon { font-size: 22px; margin-bottom: 6px; }
+  .portfolio-item-label { font-size: 12px; color: var(--sub); }
+
+  .step-page { display: none; }
+  .step-page.active { display: block; animation: fadeUp 0.3s ease; }
+
+  .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #fff; margin: 0 2px; animation: bounce 1.2s infinite; }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-5px)} }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">✦</div>
+    <div>
+      <div class="logo-text">ResumeAI</div>
+      <div class="logo-sub">AI 이력서 빌더</div>
+    </div>
+  </div>
+  <div class="tab-group">
+    <button class="tab active" onclick="switchTab('resume',this)">이력서</button>
+    <button class="tab" onclick="switchTab('portfolio',this)">포트폴리오</button>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="panel">
+    <div class="steps-nav">
+      <div class="step-dots">
+        <button class="step-dot active" onclick="goStep(0)" id="dot-0"></button>
+        <button class="step-dot todo"   onclick="goStep(1)" id="dot-1"></button>
+        <button class="step-dot todo"   onclick="goStep(2)" id="dot-2"></button>
+        <button class="step-dot todo"   onclick="goStep(3)" id="dot-3"></button>
+      </div>
+      <div class="step-title" id="step-title">기본 정보</div>
+      <div class="step-desc" id="step-desc">이름, 연락처 등 기본 정보를 입력하세요</div>
+    </div>
+
+    <div class="panel-inner">
+
+      <!-- Step 0 -->
+      <div class="step-page active" id="page-0">
+        <div class="field"><label>이름</label><input id="f-name" placeholder="홍길동" oninput="updatePreview()"></div>
+        <div class="field"><label>직함 / 포지션</label><input id="f-title" placeholder="Frontend Developer" oninput="updatePreview()"></div>
+        <div class="field"><label>이메일</label><input id="f-email" placeholder="hello@email.com" oninput="updatePreview()"></div>
+        <div class="field"><label>전화번호</label><input id="f-phone" placeholder="010-0000-0000" oninput="updatePreview()"></div>
+        <div class="field"><label>위치</label><input id="f-location" placeholder="서울, 대한민국" oninput="updatePreview()"></div>
+        <div class="field"><label>자기소개 (AI 자동 생성 가능)</label><textarea id="f-summary" rows="4" placeholder="간략한 자기소개를 입력하거나 비워두면 AI가 생성합니다" oninput="updatePreview()"></textarea></div>
+      </div>
+
+      <!-- Step 1 -->
+      <div class="step-page" id="page-1">
+        <div class="section-group-title">경력</div>
+        <div id="exp-list">
+          <div class="exp-card">
+            <div class="exp-card-header"><span class="exp-card-label">경력 1</span></div>
+            <div class="field"><label>회사명</label><input placeholder="회사명" class="ec-company" oninput="updatePreview()"></div>
+            <div class="field"><label>직책</label><input placeholder="역할/직책" class="ec-role" oninput="updatePreview()"></div>
+            <div class="field"><label>기간</label><input placeholder="2022.01 ~ 2024.03" class="ec-period" oninput="updatePreview()"></div>
+            <div class="field"><label>업무 내용</label><textarea rows="3" placeholder="주요 업무와 성과를 입력하세요" class="ec-desc" oninput="updatePreview()"></textarea></div>
+          </div>
+        </div>
+        <button class="add-btn" onclick="addExp()">+ 경력 추가</button>
+        <div class="section-group-title" style="margin-top:22px">학력</div>
+        <div id="edu-list">
+          <div class="exp-card">
+            <div class="field"><label>학교명</label><input placeholder="대학교" class="ed-school" oninput="updatePreview()"></div>
+            <div class="field"><label>전공/학위</label><input placeholder="컴퓨터공학과 학사" class="ed-degree" oninput="updatePreview()"></div>
+            <div class="field"><label>졸업연도</label><input placeholder="2022" class="ed-year" oninput="updatePreview()"></div>
+          </div>
+        </div>
+        <button class="add-btn" onclick="addEdu()">+ 학력 추가</button>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="step-page" id="page-2">
+        <div class="field"><label>스킬 (쉼표로 구분)</label><textarea id="f-skills" rows="3" placeholder="React, TypeScript, Node.js, Python, Figma..." oninput="updatePreview()"></textarea></div>
+        <div class="field"><label>GitHub</label><input id="f-github" placeholder="github.com/username" oninput="updatePreview()"></div>
+        <div class="field"><label>LinkedIn</label><input id="f-linkedin" placeholder="linkedin.com/in/username" oninput="updatePreview()"></div>
+        <div class="field"><label>개인 웹사이트</label><input id="f-website" placeholder="yoursite.com" oninput="updatePreview()"></div>
+        <div class="field">
+          <label>템플릿 선택</label>
+          <div class="template-grid">
+            <button class="template-btn active" onclick="setTemplate('modern',this)">
+              <div class="template-swatch" style="background:#0A0A0F;border:2px solid #00D4FF"></div>
+              <span class="template-name">Modern</span>
+            </button>
+            <button class="template-btn" onclick="setTemplate('classic',this)">
+              <div class="template-swatch" style="background:#FAF7F2;border:2px solid #C9A96E"></div>
+              <span class="template-name">Classic</span>
+            </button>
+            <button class="template-btn" onclick="setTemplate('bold',this)">
+              <div class="template-swatch" style="background:#FAFAFA;border:2px solid #FF3366"></div>
+              <span class="template-name">Bold</span>
+            </button>
+            <button class="template-btn" onclick="setTemplate('minimal',this)">
+              <div class="template-swatch" style="background:#F5F5F5;border:2px solid #1A1A1A"></div>
+              <span class="template-name">Minimal</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="step-page" id="page-3">
+        <button class="btn-ai" id="ai-btn" onclick="generateAI()">✦ AI로 자동 생성</button>
+        <div class="ai-success" id="ai-success">
+          <div class="ai-success-title">✓ AI 생성 완료!</div>
+          <div class="ai-success-text" id="ai-preview-text"></div>
+        </div>
+        <button class="btn-outline" onclick="downloadPDF()">📄 PDF 다운로드</button>
+        <button class="btn-outline" onclick="switchTab('portfolio', document.querySelectorAll('.tab')[1])">🌐 포트폴리오 보기</button>
+        <div style="margin-top:16px;padding:14px;background:rgba(255,107,205,0.07);border:1px solid rgba(255,107,205,0.2);border-radius:10px">
+          <div style="font-size:11px;color:#FF6BCD;font-weight:700;margin-bottom:6px">💡 배포 팁</div>
+          <div style="font-size:12px;color:var(--sub);line-height:1.7">이 HTML 파일을 Vercel, Netlify, 또는 GitHub Pages에 업로드하면 즉시 배포 가능합니다.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="panel-nav">
+      <button class="nav-prev" id="btn-prev" onclick="prevStep()" style="display:none">← 이전</button>
+      <button class="nav-next" id="btn-next" onclick="nextStep()">다음 →</button>
+    </div>
+  </div>
+
+  <!-- Right Preview -->
+  <div class="preview-area">
+    <div class="preview-header">
+      <div class="preview-label">실시간 미리보기</div>
+      <div class="template-quick">
+        <button class="tq-btn active" style="background:#0A0A0F" onclick="setTemplate('modern',null,this)" title="Modern"></button>
+        <button class="tq-btn" style="background:#FAF7F2" onclick="setTemplate('classic',null,this)" title="Classic"></button>
+        <button class="tq-btn" style="background:#FF3366" onclick="setTemplate('bold',null,this)" title="Bold"></button>
+        <button class="tq-btn" style="background:#1A1A1A" onclick="setTemplate('minimal',null,this)" title="Minimal"></button>
+      </div>
+    </div>
+    <div id="resume-preview"></div>
+    <div id="portfolio-section" style="display:none"></div>
+  </div>
+</div>
+
+<script>
+  let currentStep = 0, currentTemplate = 'modern', aiGenerated = null, expCount = 1, eduCount = 1, activeTab = 'resume';
+
+  const STEPS = [
+    ['기본 정보','이름, 연락처 등 기본 정보를 입력하세요'],
+    ['경력 & 학력','경력과 학력 정보를 추가하세요'],
+    ['스킬 & 링크','기술 스택과 소셜 링크를 입력하세요'],
+    ['생성 & 다운로드','AI로 내용을 생성하고 다운로드하세요'],
+  ];
+
+  const T = {
+    modern:  {bg:'#0A0A0F', card:'#111118', accent:'#00D4FF', text:'#F0F0FF', sub:'#7070AA', border:'#1E1E30', font:"'DM Mono',monospace"},
+    classic: {bg:'#FAF7F2', card:'#FFFFFF',  accent:'#C9A96E', text:'#1A1A1A', sub:'#666',   border:'#E8E0D0', font:"Georgia,serif"},
+    bold:    {bg:'#FAFAFA', card:'#FFFFFF',  accent:'#FF3366', text:'#0A0A0A', sub:'#555',   border:'#EBEBEB', font:"'Helvetica Neue',sans-serif"},
+    minimal: {bg:'#F5F5F5', card:'#FFFFFF',  accent:'#1A1A1A', text:'#0A0A0A', sub:'#888',   border:'#E0E0E0', font:"Georgia,serif"},
+  };
+
+  function getData() {
+    const exps = [...document.querySelectorAll('#exp-list .exp-card')].map(c => ({
+      company: c.querySelector('.ec-company').value,
+      role:    c.querySelector('.ec-role').value,
+      period:  c.querySelector('.ec-period').value,
+      desc:    c.querySelector('.ec-desc').value,
+    }));
+    const edus = [...document.querySelectorAll('#edu-list .exp-card')].map(c => ({
+      school: c.querySelector('.ed-school').value,
+      degree: c.querySelector('.ed-degree').value,
+      year:   c.querySelector('.ed-year').value,
+    }));
+    return {
+      name: document.getElementById('f-name').value,
+      title: document.getElementById('f-title').value,
+      email: document.getElementById('f-email').value,
+      phone: document.getElementById('f-phone').value,
+      location: document.getElementById('f-location').value,
+      summary: document.getElementById('f-summary').value,
+      skills: document.getElementById('f-skills').value,
+      github: document.getElementById('f-github').value,
+      linkedin: document.getElementById('f-linkedin').value,
+      website: document.getElementById('f-website').value,
+      experience: exps, education: edus,
+    };
+  }
+
+  function sec(title, content, accent, border) {
+    if (!content) return '';
+    return `<div class="resume-section">
+      <div class="section-header">
+        <span class="section-ttl" style="color:${accent}">${title}</span>
+        <div class="section-line" style="background:${border}"></div>
+      </div>${content}</div>`;
+  }
+
+  function updatePreview() {
+    const d = getData(), t = T[currentTemplate];
+    const skillTags = d.skills ? d.skills.split(',').map(s=>s.trim()).filter(Boolean)
+      .map(s=>`<span class="skill-tag" style="background:${t.accent}18;color:${t.accent};border:1px solid ${t.accent}44">${s}</span>`).join('') : '';
+    const expHtml = d.experience.filter(e=>e.company).map((e,i)=>`
+      <div class="exp-item">
+        <div class="exp-top">
+          <div>
+            <div class="exp-company" style="color:${t.text}">${e.company}</div>
+            <div class="exp-role-txt" style="color:${t.accent}">${e.role}</div>
+          </div>
+          <div class="exp-period" style="color:${t.sub}">${e.period}</div>
+        </div>
+        ${(aiGenerated?.experience?.[i]||e.desc)?`<div class="exp-desc" style="color:${t.sub}">${aiGenerated?.experience?.[i]||e.desc}</div>`:''}
+      </div>`).join('');
+    const eduHtml = d.education.filter(e=>e.school).map(e=>`
+      <div class="edu-item">
+        <div><div style="font-size:13px;font-weight:600;color:${t.text}">${e.school}</div><div style="font-size:12px;color:${t.sub}">${e.degree}</div></div>
+        <div style="font-size:11px;color:${t.sub}">${e.year}</div>
+      </div>`).join('');
+    const contacts = [d.email&&`✉ ${d.email}`,d.phone&&`📞 ${d.phone}`,d.location&&`📍 ${d.location}`].filter(Boolean)
+      .map(s=>`<span>${s}</span>`).join('');
+    const links = [d.github&&`🐙 ${d.github}`,d.linkedin&&`💼 ${d.linkedin}`,d.website&&`🌐 ${d.website}`].filter(Boolean)
+      .map(s=>`<span style="color:${t.accent}">${s}</span>`).join('');
+    const summary = aiGenerated?.summary || d.summary;
+
+    document.getElementById('resume-preview').innerHTML = `
+      <div class="resume-card" style="background:${t.card}">
+        <div class="resume-accent-bar" style="background:${t.accent}"></div>
+        <div class="resume-inner" style="font-family:${t.font}">
+          <div class="resume-name" style="color:${t.text}">${d.name||'홍길동'}</div>
+          <div class="resume-title-row" style="color:${t.accent}">${d.title||'Software Engineer'}</div>
+          <div class="resume-contacts" style="color:${t.sub}">${contacts}</div>
+          ${sec('소개', summary?`<p style="font-size:13px;line-height:1.8;color:${t.sub}">${summary}</p>`:'', t.accent, t.border)}
+          ${sec('경력', expHtml, t.accent, t.border)}
+          ${sec('학력', eduHtml, t.accent, t.border)}
+          ${sec('스킬', skillTags?`<div class="skill-tags">${skillTags}</div>`:'', t.accent, t.border)}
+          ${sec('링크', links?`<div class="link-row">${links}</div>`:'', t.accent, t.border)}
+        </div>
+      </div>`;
+
+    if (activeTab === 'portfolio') {
+      const skillTagsP = d.skills ? d.skills.split(',').map(s=>s.trim()).filter(Boolean)
+        .map(s=>`<span style="background:rgba(124,110,255,0.12);color:var(--accent);border:1px solid rgba(124,110,255,0.3);border-radius:20px;padding:4px 14px;font-size:12px">${s}</span>`).join('') : '';
+      document.getElementById('portfolio-section').innerHTML = `
+        <div class="portfolio-card">
+          <div class="portfolio-tag">포트폴리오 페이지</div>
+          <div class="portfolio-name">${d.name||'Your Name'}</div>
+          <div class="portfolio-subtitle">${d.title||'Your Title'}</div>
+          <div class="portfolio-grid">
+            <div class="portfolio-item"><div class="portfolio-item-icon">🚀</div><div class="portfolio-item-label">프로젝트</div></div>
+            <div class="portfolio-item"><div class="portfolio-item-icon">🏢</div><div class="portfolio-item-label">경력</div></div>
+            <div class="portfolio-item"><div class="portfolio-item-icon">📬</div><div class="portfolio-item-label">연락처</div></div>
+          </div>
+          ${skillTagsP?`<div style="display:flex;flex-wrap:wrap;gap:8px">${skillTagsP}</div>`:''}
+        </div>`;
+    }
+  }
+
+  function goStep(n) {
+    document.getElementById(`page-${currentStep}`).classList.remove('active');
+    document.getElementById(`dot-${currentStep}`).className = `step-dot ${currentStep < n ? 'done' : 'todo'}`;
+    currentStep = n;
+    document.getElementById(`page-${n}`).classList.add('active');
+    document.getElementById(`dot-${n}`).className = 'step-dot active';
+    document.getElementById('step-title').textContent = STEPS[n][0];
+    document.getElementById('step-desc').textContent = STEPS[n][1];
+    document.getElementById('btn-prev').style.display = n > 0 ? '' : 'none';
+    document.getElementById('btn-next').style.display = n < 3 ? '' : 'none';
+  }
+  function nextStep() { if (currentStep < 3) goStep(currentStep + 1); }
+  function prevStep() { if (currentStep > 0) goStep(currentStep - 1); }
+
+  function setTemplate(name, panelBtn, quickBtn) {
+    currentTemplate = name;
+    if (panelBtn) { document.querySelectorAll('.template-btn').forEach(b=>b.classList.remove('active')); panelBtn.classList.add('active'); }
+    if (quickBtn) { document.querySelectorAll('.tq-btn').forEach(b=>b.classList.remove('active')); quickBtn.classList.add('active'); }
+    updatePreview();
+  }
+
+  function switchTab(tab, el) {
+    activeTab = tab;
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('portfolio-section').style.display = tab === 'portfolio' ? 'block' : 'none';
+    updatePreview();
+  }
+
+  function addExp() {
+    expCount++;
+    const div = document.createElement('div'); div.className = 'exp-card';
+    div.innerHTML = `<div class="exp-card-header"><span class="exp-card-label">경력 ${expCount}</span><button class="del-btn" onclick="this.closest('.exp-card').remove();updatePreview()">삭제</button></div>
+      <div class="field"><label>회사명</label><input placeholder="회사명" class="ec-company" oninput="updatePreview()"></div>
+      <div class="field"><label>직책</label><input placeholder="역할/직책" class="ec-role" oninput="updatePreview()"></div>
+      <div class="field"><label>기간</label><input placeholder="2022.01 ~ 2024.03" class="ec-period" oninput="updatePreview()"></div>
+      <div class="field"><label>업무 내용</label><textarea rows="3" placeholder="주요 업무와 성과를 입력하세요" class="ec-desc" oninput="updatePreview()"></textarea></div>`;
+    document.getElementById('exp-list').appendChild(div);
+  }
+
+  function addEdu() {
+    eduCount++;
+    const div = document.createElement('div'); div.className = 'exp-card';
+    div.innerHTML = `<div class="exp-card-header"><span class="exp-card-label">학력 ${eduCount}</span><button class="del-btn" onclick="this.closest('.exp-card').remove();updatePreview()">삭제</button></div>
+      <div class="field"><label>학교명</label><input placeholder="대학교" class="ed-school" oninput="updatePreview()"></div>
+      <div class="field"><label>전공/학위</label><input placeholder="컴퓨터공학과 학사" class="ed-degree" oninput="updatePreview()"></div>
+      <div class="field"><label>졸업연도</label><input placeholder="2022" class="ed-year" oninput="updatePreview()"></div>`;
+    document.getElementById('edu-list').appendChild(div);
+  }
+
+  async function generateAI() {
+    const d = getData(), btn = document.getElementById('ai-btn');
+    btn.disabled = true;
+    btn.innerHTML = 'AI 생성 중 <span class="dot"></span><span class="dot"></span><span class="dot"></span>';
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514', max_tokens: 1000,
+          messages: [{role:'user', content:`다음 정보로 한국어 이력서 내용 생성:\n이름:${d.name}, 직함:${d.title}\n경력:${d.experience.map(e=>`${e.company}(${e.role}):${e.desc}`).join(', ')}\n스킬:${d.skills}\n\nJSON만 응답(마크다운 없이):{"summary":"3-4문장 자기소개","experience":["경력별 개선 설명 배열"]}`}]
+        })
+      });
+      const data = await res.json();
+      aiGenerated = JSON.parse(data.content[0].text.replace(/```json|```/g,'').trim());
+    } catch(e) {
+      aiGenerated = {
+        summary: `${d.name||'지원자'}는 ${d.title||'해당 분야'}에서 뛰어난 전문성을 갖춘 인재입니다. 다양한 프로젝트 경험과 실무 역량을 보유하고 있으며, 창의적 문제 해결 능력으로 팀에 기여합니다.`,
+        experience: d.experience.map(e=>e.desc)
+      };
+    }
+    btn.disabled = false; btn.textContent = '✦ AI 재생성';
+    const box = document.getElementById('ai-success'); box.classList.add('show');
+    document.getElementById('ai-preview-text').textContent = aiGenerated.summary.slice(0,120)+'...';
+    updatePreview();
+  }
+
+  function downloadPDF() {
+    const t = T[currentTemplate];
+    const win = window.open('','_blank');
+    win.document.write(`<!DOCTYPE html><html><head><title>이력서</title>
+      <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800&display=swap" rel="stylesheet">
+      <style>*{box-sizing:border-box;margin:0;padding:0}body{background:${t.bg};font-family:'Pretendard',sans-serif;padding:30px}
+      .resume-card{border-radius:12px;overflow:hidden}.resume-accent-bar{height:4px}.resume-inner{padding:36px 40px}
+      .resume-name{font-size:26px;font-weight:800;margin-bottom:4px}.resume-title-row{font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px}
+      .resume-contacts{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;margin-bottom:28px}.resume-section{margin-bottom:22px}
+      .section-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}.section-ttl{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase}
+      .section-line{flex:1;height:1px}.exp-item{margin-bottom:14px}.exp-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:3px}
+      .exp-company{font-size:14px;font-weight:700}.exp-role-txt{font-size:12px;margin-bottom:4px}.exp-period{font-size:11px;white-space:nowrap}
+      .exp-desc{font-size:12px;line-height:1.7}.edu-item{display:flex;justify-content:space-between;margin-bottom:8px}
+      .skill-tags{display:flex;flex-wrap:wrap;gap:7px}.skill-tag{border-radius:20px;padding:4px 12px;font-size:12px;font-weight:500}
+      .link-row{display:flex;gap:14px;flex-wrap:wrap;font-size:12px}@media print{body{padding:0}}</style>
+    </head><body>${document.getElementById('resume-preview').innerHTML}<script>window.onload=()=>{window.print()}<\/script></body></html>`);
+    win.document.close();
+  }
+
+  updatePreview();
+</script>
+</body>
+</html>
