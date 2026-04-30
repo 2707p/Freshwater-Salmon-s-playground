@@ -3,481 +3,766 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ResumeAI — AI 이력서 빌더</title>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@400;500&family=Pretendard:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<title>서울시 육아친화환경 지수 (CFEI) 대시보드</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #080810;
-    --card: #0F0F1A;
-    --border: #1A1A2E;
-    --accent: #7C6EFF;
-    --accent2: #FF6BCD;
-    --text: #EEEEFF;
-    --sub: #7070A0;
-    --input-bg: #060610;
+    --navy: #1B3A6B;
+    --teal: #0D8A7A;
+    --mint: #2DC4B0;
+    --accent: #F4A623;
+    --red: #E05C5C;
+    --light: #F4F7FB;
+    --white: #FFFFFF;
+    --gray: #64748B;
+    --dark: #1E293B;
+    --card-bg: #FFFFFF;
+    --border: #E2E8F0;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: 'Pretendard', 'Segoe UI', sans-serif; min-height: 100vh; }
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #2A2A40; border-radius: 4px; }
 
-  .header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 16px 28px; border-bottom: 1px solid var(--border);
-    background: var(--card); position: sticky; top: 0; z-index: 100;
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--light);
+    color: var(--dark);
+    min-height: 100vh;
   }
-  .logo { display: flex; align-items: center; gap: 10px; }
-  .logo-icon { width: 34px; height: 34px; border-radius: 9px; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-size: 16px; }
-  .logo-text { font-size: 17px; font-weight: 800; letter-spacing: -0.5px; }
-  .logo-sub { font-size: 10px; color: var(--sub); letter-spacing: 1.5px; text-transform: uppercase; }
-  .tab-group { display: flex; gap: 6px; }
-  .tab { padding: 7px 18px; border-radius: 20px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; font-family: inherit; }
-  .tab.active { background: var(--accent); color: #fff; }
-  .tab:not(.active) { background: transparent; color: var(--sub); }
 
-  .layout { display: grid; grid-template-columns: 380px 1fr; min-height: calc(100vh - 65px); }
-  .panel { background: var(--card); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
-  .panel-inner { flex: 1; overflow-y: auto; padding: 0 22px 22px; }
-  .steps-nav { padding: 20px 22px 0; }
-  .step-dots { display: flex; gap: 6px; margin-bottom: 20px; }
-  .step-dot { flex: 1; height: 4px; border-radius: 4px; cursor: pointer; transition: all 0.3s; border: none; }
-  .step-dot.done { background: var(--accent); opacity: 0.4; }
-  .step-dot.active { background: var(--accent); }
-  .step-dot.todo { background: var(--border); }
-  .step-title { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
-  .step-desc { font-size: 12px; color: var(--sub); margin-bottom: 20px; line-height: 1.5; }
-
-  .field { margin-bottom: 13px; }
-  label { font-size: 11px; color: var(--sub); font-weight: 600; letter-spacing: 0.5px; display: block; margin-bottom: 5px; text-transform: uppercase; }
-  input, textarea {
-    width: 100%; background: var(--input-bg); border: 1px solid var(--border);
-    border-radius: 8px; color: var(--text); padding: 10px 13px;
-    font-size: 14px; outline: none; font-family: inherit; transition: border-color 0.2s;
+  /* ── 헤더 ── */
+  header {
+    background: var(--navy);
+    padding: 28px 40px 22px;
+    position: relative;
+    overflow: hidden;
   }
-  input:focus, textarea:focus { border-color: var(--accent); }
-  input::placeholder, textarea::placeholder { color: #333348; }
-  textarea { resize: none; }
+  header::before {
+    content: '';
+    position: absolute;
+    right: -60px; top: -60px;
+    width: 280px; height: 280px;
+    border-radius: 50%;
+    background: rgba(13,138,122,0.25);
+  }
+  header::after {
+    content: '';
+    position: absolute;
+    right: 80px; top: 60px;
+    width: 140px; height: 140px;
+    border-radius: 50%;
+    background: rgba(244,166,35,0.15);
+  }
+  .header-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.12);
+    color: #CADCFC;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 10px;
+    letter-spacing: 0.5px;
+  }
+  header h1 {
+    font-size: 26px;
+    font-weight: 900;
+    color: #fff;
+    line-height: 1.3;
+    position: relative;
+    z-index: 1;
+  }
+  header h1 span { color: var(--mint); }
+  header p {
+    margin-top: 6px;
+    color: #8BA7D0;
+    font-size: 13px;
+    position: relative;
+    z-index: 1;
+  }
 
-  .exp-card { background: var(--input-bg); border-radius: 10px; padding: 14px; margin-bottom: 10px; border: 1px solid var(--border); }
-  .exp-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-  .exp-card-label { font-size: 11px; color: var(--sub); font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
-  .del-btn { background: none; border: none; color: #FF5566; cursor: pointer; font-size: 12px; font-family: inherit; }
-  .add-btn { width: 100%; padding: 10px; border: 1px dashed rgba(124,110,255,0.4); border-radius: 8px; background: transparent; color: var(--accent); cursor: pointer; font-size: 13px; font-family: inherit; transition: all 0.2s; }
-  .add-btn:hover { background: rgba(124,110,255,0.07); }
-  .section-group-title { font-size: 12px; font-weight: 700; color: var(--accent); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid rgba(124,110,255,0.2); }
+  /* ── KPI 카드 ── */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 14px;
+    padding: 24px 32px 0;
+  }
+  .kpi {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 18px 16px 14px;
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s;
+  }
+  .kpi:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
+  .kpi::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--kpi-color, var(--teal));
+  }
+  .kpi-label { font-size: 11px; color: var(--gray); font-weight: 500; margin-bottom: 6px; }
+  .kpi-value { font-size: 26px; font-weight: 900; color: var(--kpi-color, var(--dark)); line-height: 1; font-family: 'DM Mono', monospace; }
+  .kpi-sub { font-size: 11px; color: var(--gray); margin-top: 5px; }
+  .kpi-icon { position: absolute; right: 14px; top: 14px; font-size: 20px; opacity: 0.18; }
 
-  .template-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .template-btn { border: 2px solid var(--border); border-radius: 10px; padding: 12px 10px; background: var(--input-bg); cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; font-family: inherit; }
-  .template-btn.active { border-color: var(--accent); background: rgba(124,110,255,0.1); }
-  .template-swatch { width: 26px; height: 26px; border-radius: 5px; flex-shrink: 0; }
-  .template-name { font-size: 13px; font-weight: 500; color: var(--sub); }
-  .template-btn.active .template-name { color: var(--accent); font-weight: 700; }
+  /* ── 메인 그리드 ── */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 16px;
+    padding: 18px 32px;
+  }
+  .full-width { grid-column: 1 / -1; }
 
-  .btn-ai { width: 100%; padding: 14px; border-radius: 10px; border: none; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; margin-bottom: 10px; transition: opacity 0.2s; }
-  .btn-ai:hover { opacity: 0.9; }
-  .btn-ai:disabled { opacity: 0.5; cursor: not-allowed; }
-  .btn-outline { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--input-bg); color: var(--text); font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; margin-bottom: 8px; transition: all 0.2s; }
-  .btn-outline:hover { border-color: var(--accent); }
+  /* ── 카드 공통 ── */
+  .card {
+    background: var(--white);
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+    padding: 22px;
+    transition: box-shadow 0.2s;
+  }
+  .card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.09); }
+  .card-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--teal);
+    flex-shrink: 0;
+  }
+  .card-sub { font-size: 11px; color: var(--gray); margin-bottom: 16px; }
 
-  .ai-success { background: rgba(124,110,255,0.1); border: 1px solid rgba(124,110,255,0.3); border-radius: 10px; padding: 14px; margin-bottom: 10px; display: none; }
-  .ai-success.show { display: block; animation: fadeUp 0.4s ease; }
-  .ai-success-title { font-size: 12px; color: var(--accent); font-weight: 700; margin-bottom: 6px; }
-  .ai-success-text { font-size: 12px; color: var(--sub); line-height: 1.7; }
+  /* ── 순위 리스트 ── */
+  .rank-list { display: flex; flex-direction: column; gap: 8px; }
+  .rank-item {
+    display: grid;
+    grid-template-columns: 28px 70px 1fr 52px;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    transition: background 0.15s;
+    cursor: pointer;
+  }
+  .rank-item:hover { background: var(--light); }
+  .rank-item.top1 { background: linear-gradient(90deg, #EBF8F5, #fff); }
+  .rank-item.top2 { background: linear-gradient(90deg, #F0F9FF, #fff); }
+  .rank-item.top3 { background: linear-gradient(90deg, #FFF8EC, #fff); }
+  .rank-item.bot { background: linear-gradient(90deg, #FFF5F5, #fff); }
+  .rank-no { font-size: 13px; font-weight: 700; color: var(--gray); font-family: 'DM Mono', monospace; text-align: center; }
+  .rank-no.gold { color: #F4A623; }
+  .rank-no.silver { color: #94A3B8; }
+  .rank-no.bronze { color: #CD7F32; }
+  .rank-no.red { color: var(--red); }
+  .rank-gu { font-size: 13px; font-weight: 700; color: var(--dark); }
+  .rank-bar-wrap { position: relative; height: 6px; background: #F1F5F9; border-radius: 3px; overflow: hidden; }
+  .rank-bar { height: 100%; border-radius: 3px; transition: width 1s ease; }
+  .rank-score { font-size: 12px; font-weight: 700; color: var(--navy); font-family: 'DM Mono', monospace; text-align: right; }
 
-  .panel-nav { padding: 14px 22px; border-top: 1px solid var(--border); display: flex; gap: 8px; }
-  .nav-prev { flex: 1; padding: 11px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--sub); cursor: pointer; font-size: 14px; font-family: inherit; }
-  .nav-next { flex: 2; padding: 11px; border-radius: 8px; border: none; background: var(--accent); color: #fff; cursor: pointer; font-size: 14px; font-weight: 700; font-family: inherit; }
+  /* ── 레이더 차트 래퍼 ── */
+  .chart-wrap { position: relative; height: 280px; }
+  .chart-wrap-lg { position: relative; height: 320px; }
 
-  .preview-area { padding: 28px; overflow-y: auto; background: var(--bg); }
-  .preview-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
-  .preview-label { font-size: 12px; color: var(--sub); }
-  .template-quick { display: flex; gap: 6px; }
-  .tq-btn { width: 22px; height: 22px; border-radius: 4px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; }
-  .tq-btn.active { border-color: var(--accent) !important; }
+  /* ── 영역별 점수 그리드 ── */
+  .domain-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .domain-card {
+    background: var(--light);
+    border-radius: 10px;
+    padding: 12px;
+    border-left: 3px solid var(--domain-color, var(--teal));
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .domain-card:hover, .domain-card.active { background: var(--white); box-shadow: 0 2px 10px rgba(0,0,0,0.08); transform: translateY(-2px); }
+  .domain-card .d-label { font-size: 10px; color: var(--gray); margin-bottom: 4px; font-weight: 500; }
+  .domain-card .d-name { font-size: 12px; font-weight: 700; color: var(--dark); margin-bottom: 6px; }
+  .domain-card .d-best { font-size: 10px; color: var(--teal); }
+  .domain-card .d-worst { font-size: 10px; color: var(--red); margin-top: 2px; }
 
-  .resume-card { border-radius: 12px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
-  .resume-accent-bar { height: 4px; }
-  .resume-inner { padding: 36px 40px; }
-  .resume-name { font-size: 26px; font-weight: 800; margin-bottom: 4px; }
-  .resume-title-row { font-size: 13px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 10px; }
-  .resume-contacts { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; margin-bottom: 28px; }
-  .resume-section { margin-bottom: 22px; }
-  .section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-  .section-ttl { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
-  .section-line { flex: 1; height: 1px; }
-  .exp-item { margin-bottom: 14px; }
-  .exp-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 3px; }
-  .exp-company { font-size: 14px; font-weight: 700; }
-  .exp-role-txt { font-size: 12px; margin-bottom: 4px; }
-  .exp-period { font-size: 11px; white-space: nowrap; }
-  .exp-desc { font-size: 12px; line-height: 1.7; }
-  .edu-item { display: flex; justify-content: space-between; margin-bottom: 8px; }
-  .skill-tags { display: flex; flex-wrap: wrap; gap: 7px; }
-  .skill-tag { border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 500; }
-  .link-row { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; }
+  /* ── 인사이트 박스 ── */
+  .insight-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .insight-item {
+    background: var(--light);
+    border-radius: 10px;
+    padding: 14px;
+    border-left: 3px solid var(--ins-color, var(--teal));
+  }
+  .insight-item .ins-title { font-size: 12px; font-weight: 700; color: var(--ins-color, var(--dark)); margin-bottom: 6px; }
+  .insight-item .ins-body { font-size: 11px; color: var(--gray); line-height: 1.6; }
 
-  .portfolio-card { margin-top: 22px; background: var(--card); border-radius: 12px; border: 1px solid var(--border); padding: 32px; animation: fadeUp 0.4s ease; }
-  .portfolio-tag { font-size: 10px; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; font-weight: 700; margin-bottom: 14px; }
-  .portfolio-name { font-size: 34px; font-weight: 800; margin-bottom: 8px; background: linear-gradient(135deg, var(--text), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-family: 'Instrument Serif', Georgia, serif; }
-  .portfolio-subtitle { font-size: 15px; color: var(--sub); margin-bottom: 22px; }
-  .portfolio-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-  .portfolio-item { background: var(--input-bg); border-radius: 10px; padding: 18px 14px; text-align: center; border: 1px solid var(--border); }
-  .portfolio-item-icon { font-size: 22px; margin-bottom: 6px; }
-  .portfolio-item-label { font-size: 12px; color: var(--sub); }
+  /* ── 히트맵 테이블 ── */
+  .heatmap-wrap { overflow-x: auto; }
+  .heatmap {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+  }
+  .heatmap th {
+    background: var(--navy);
+    color: white;
+    padding: 8px 10px;
+    font-weight: 600;
+    font-size: 11px;
+    text-align: center;
+    white-space: nowrap;
+  }
+  .heatmap td {
+    padding: 6px 10px;
+    text-align: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+  .heatmap tr:hover td { filter: brightness(0.95); }
+  .heatmap .gu-name { font-family: 'Noto Sans KR', sans-serif; font-weight: 600; color: var(--dark); text-align: left; font-size: 12px; }
 
-  .step-page { display: none; }
-  .step-page.active { display: block; animation: fadeUp 0.3s ease; }
+  /* ── 푸터 ── */
+  footer {
+    text-align: center;
+    padding: 20px;
+    font-size: 11px;
+    color: var(--gray);
+  }
 
-  .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #fff; margin: 0 2px; animation: bounce 1.2s infinite; }
-  .dot:nth-child(2) { animation-delay: 0.2s; }
-  .dot:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-5px)} }
-  @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+  /* ── 탭 ── */
+  .tab-row { display: flex; gap: 8px; margin-bottom: 14px; }
+  .tab {
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1.5px solid var(--border);
+    background: var(--white);
+    color: var(--gray);
+    transition: all 0.2s;
+  }
+  .tab.active { background: var(--navy); color: white; border-color: var(--navy); }
+
+  /* ── 애니메이션 ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .card { animation: fadeUp 0.5s ease both; }
+  .card:nth-child(1) { animation-delay: 0.05s; }
+  .card:nth-child(2) { animation-delay: 0.12s; }
+  .card:nth-child(3) { animation-delay: 0.18s; }
+  .kpi { animation: fadeUp 0.5s ease both; }
+  .kpi:nth-child(1) { animation-delay: 0.02s; }
+  .kpi:nth-child(2) { animation-delay: 0.06s; }
+  .kpi:nth-child(3) { animation-delay: 0.10s; }
+  .kpi:nth-child(4) { animation-delay: 0.14s; }
+  .kpi:nth-child(5) { animation-delay: 0.18s; }
+
+  .section-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    padding: 0 32px 16px;
+  }
+  .section-row-2 {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
+    padding: 0 32px 16px;
+  }
+  .section-row-full {
+    padding: 0 32px 16px;
+  }
+
+  .score-pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 700;
+    font-family: 'DM Mono', monospace;
+  }
 </style>
 </head>
 <body>
 
-<div class="header">
-  <div class="logo">
-    <div class="logo-icon">✦</div>
-    <div>
-      <div class="logo-text">ResumeAI</div>
-      <div class="logo-sub">AI 이력서 빌더</div>
-    </div>
+<!-- 헤더 -->
+<header>
+  <div class="header-badge">2026 서울시 빅데이터 활용 경진대회 · 분석 부문</div>
+  <h1>서울시 <span>육아친화환경 종합지수(CFEI)</span> 대시보드</h1>
+  <p>안전 · 돌봄·교육 · 여가 · 주거 4개 영역 · 13종 공공데이터 기반 · 25개 자치구 분석</p>
+</header>
+
+<!-- KPI 카드 -->
+<div class="kpi-row">
+  <div class="kpi" style="--kpi-color: #0D8A7A">
+    <div class="kpi-icon">🏆</div>
+    <div class="kpi-label">CFEI 1위</div>
+    <div class="kpi-value">노원구</div>
+    <div class="kpi-sub">종합점수 0.682</div>
   </div>
-  <div class="tab-group">
-    <button class="tab active" onclick="switchTab('resume',this)">이력서</button>
-    <button class="tab" onclick="switchTab('portfolio',this)">포트폴리오</button>
+  <div class="kpi" style="--kpi-color: #E05C5C">
+    <div class="kpi-icon">⚠️</div>
+    <div class="kpi-label">CFEI 최하위</div>
+    <div class="kpi-value">강동구</div>
+    <div class="kpi-sub">종합점수 0.385</div>
+  </div>
+  <div class="kpi" style="--kpi-color: #1B3A6B">
+    <div class="kpi-icon">📊</div>
+    <div class="kpi-label">격차 (1위-25위)</div>
+    <div class="kpi-value">0.297</div>
+    <div class="kpi-sub">자치구 간 환경 불평등</div>
+  </div>
+  <div class="kpi" style="--kpi-color: #F4A623">
+    <div class="kpi-icon">🔍</div>
+    <div class="kpi-label">주거 격차 (N4)</div>
+    <div class="kpi-value">1.000</div>
+    <div class="kpi-sub">강동구(0) vs 성동구(1)</div>
+  </div>
+  <div class="kpi" style="--kpi-color: #8B5CF6">
+    <div class="kpi-icon">📍</div>
+    <div class="kpi-label">서울 합계출산율</div>
+    <div class="kpi-value">0.55명</div>
+    <div class="kpi-sub">2023년 · 전국 최저</div>
+  </div>
+</div>
+
+<!-- 섹션1: 순위 + 레이더 차트 -->
+<div class="section-row" style="padding-top:18px;">
+
+  <!-- 전체 순위 -->
+  <div class="card" style="grid-column: span 1;">
+    <div class="card-title"><span class="dot"></span>25개 자치구 CFEI 종합 순위</div>
+    <div class="card-sub">클릭하면 레이더 차트 업데이트</div>
+    <div class="rank-list" id="rankList"></div>
+  </div>
+
+  <!-- 레이더 차트 -->
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--accent)"></span>영역별 비교 레이더</div>
+    <div class="card-sub" id="radarSub">선택된 자치구의 4개 영역 점수</div>
+    <div class="chart-wrap-lg">
+      <canvas id="radarChart"></canvas>
+    </div>
+    <!-- 범례 -->
+    <div id="radarLegend" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;justify-content:center;font-size:11px;"></div>
+  </div>
+
+  <!-- 인사이트 -->
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--accent)"></span>핵심 인사이트</div>
+    <div class="card-sub">데이터가 밝혀낸 서울 육아환경의 진실</div>
+    <div class="insight-grid">
+      <div class="insight-item" style="--ins-color:#0D8A7A">
+        <div class="ins-title">💡 균형이 답이다</div>
+        <div class="ins-body">노원구(1위)는 고가 지역이 아님에도 4개 영역 균형으로 1위. "비싸야 좋은 동네"가 아님을 데이터로 증명.</div>
+      </div>
+      <div class="insight-item" style="--ins-color:#E05C5C">
+        <div class="ins-title">⚠️ 주거비가 핵심 변수</div>
+        <div class="ins-body">N4 주거 격차(1.000)가 가장 극심. 강동구(0.0) vs 성동구(1.0). 육아환경 불평등은 주거비와 직결.</div>
+      </div>
+      <div class="insight-item" style="--ins-color:#1B3A6B">
+        <div class="ins-title">🔍 종로구의 역설</div>
+        <div class="ins-body">서울 중심이지만 N2 돌봄·교육 0.085로 압도적 최하위. 업무지구 특성상 아동 인구 자체가 적음.</div>
+      </div>
+      <div class="insight-item" style="--ins-color:#F59E0B">
+        <div class="ins-title">📊 영역별 강자가 다르다</div>
+        <div class="ins-body">안전: 도봉구 / 여가: 서초구 / 주거: 성동구 / 돌봄: 양천구. 맞춤형 정책 설계가 필요.</div>
+      </div>
+    </div>
   </div>
 </div>
 
-<div class="layout">
-  <div class="panel">
-    <div class="steps-nav">
-      <div class="step-dots">
-        <button class="step-dot active" onclick="goStep(0)" id="dot-0"></button>
-        <button class="step-dot todo"   onclick="goStep(1)" id="dot-1"></button>
-        <button class="step-dot todo"   onclick="goStep(2)" id="dot-2"></button>
-        <button class="step-dot todo"   onclick="goStep(3)" id="dot-3"></button>
+<!-- 섹션2: 영역별 바 차트 -->
+<div class="section-row-full">
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--red)"></span>영역별 자치구 점수 비교</div>
+    <div class="card-sub">탭을 클릭해서 영역별로 확인하세요</div>
+    <div class="domain-grid">
+      <div class="domain-card active" style="--domain-color:#E05C5C" onclick="switchDomain(0,this)">
+        <div class="d-label">N1</div>
+        <div class="d-name">🛡️ 안전</div>
+        <div class="d-best">최고: 도봉구 (0.709)</div>
+        <div class="d-worst">최저: 송파구 (0.272)</div>
       </div>
-      <div class="step-title" id="step-title">기본 정보</div>
-      <div class="step-desc" id="step-desc">이름, 연락처 등 기본 정보를 입력하세요</div>
-    </div>
-
-    <div class="panel-inner">
-
-      <!-- Step 0 -->
-      <div class="step-page active" id="page-0">
-        <div class="field"><label>이름</label><input id="f-name" placeholder="홍길동" oninput="updatePreview()"></div>
-        <div class="field"><label>직함 / 포지션</label><input id="f-title" placeholder="Frontend Developer" oninput="updatePreview()"></div>
-        <div class="field"><label>이메일</label><input id="f-email" placeholder="hello@email.com" oninput="updatePreview()"></div>
-        <div class="field"><label>전화번호</label><input id="f-phone" placeholder="010-0000-0000" oninput="updatePreview()"></div>
-        <div class="field"><label>위치</label><input id="f-location" placeholder="서울, 대한민국" oninput="updatePreview()"></div>
-        <div class="field"><label>자기소개 (AI 자동 생성 가능)</label><textarea id="f-summary" rows="4" placeholder="간략한 자기소개를 입력하거나 비워두면 AI가 생성합니다" oninput="updatePreview()"></textarea></div>
+      <div class="domain-card" style="--domain-color:#0D8A7A" onclick="switchDomain(1,this)">
+        <div class="d-label">N2</div>
+        <div class="d-name">🏫 돌봄·교육</div>
+        <div class="d-best">최고: 양천구 (0.647)</div>
+        <div class="d-worst">최저: 종로구 (0.085)</div>
       </div>
-
-      <!-- Step 1 -->
-      <div class="step-page" id="page-1">
-        <div class="section-group-title">경력</div>
-        <div id="exp-list">
-          <div class="exp-card">
-            <div class="exp-card-header"><span class="exp-card-label">경력 1</span></div>
-            <div class="field"><label>회사명</label><input placeholder="회사명" class="ec-company" oninput="updatePreview()"></div>
-            <div class="field"><label>직책</label><input placeholder="역할/직책" class="ec-role" oninput="updatePreview()"></div>
-            <div class="field"><label>기간</label><input placeholder="2022.01 ~ 2024.03" class="ec-period" oninput="updatePreview()"></div>
-            <div class="field"><label>업무 내용</label><textarea rows="3" placeholder="주요 업무와 성과를 입력하세요" class="ec-desc" oninput="updatePreview()"></textarea></div>
-          </div>
-        </div>
-        <button class="add-btn" onclick="addExp()">+ 경력 추가</button>
-        <div class="section-group-title" style="margin-top:22px">학력</div>
-        <div id="edu-list">
-          <div class="exp-card">
-            <div class="field"><label>학교명</label><input placeholder="대학교" class="ed-school" oninput="updatePreview()"></div>
-            <div class="field"><label>전공/학위</label><input placeholder="컴퓨터공학과 학사" class="ed-degree" oninput="updatePreview()"></div>
-            <div class="field"><label>졸업연도</label><input placeholder="2022" class="ed-year" oninput="updatePreview()"></div>
-          </div>
-        </div>
-        <button class="add-btn" onclick="addEdu()">+ 학력 추가</button>
+      <div class="domain-card" style="--domain-color:#F59E0B" onclick="switchDomain(2,this)">
+        <div class="d-label">N3</div>
+        <div class="d-name">🌳 여가</div>
+        <div class="d-best">최고: 서초구 (0.967)</div>
+        <div class="d-worst">최저: 종로구 (0.202)</div>
       </div>
-
-      <!-- Step 2 -->
-      <div class="step-page" id="page-2">
-        <div class="field"><label>스킬 (쉼표로 구분)</label><textarea id="f-skills" rows="3" placeholder="React, TypeScript, Node.js, Python, Figma..." oninput="updatePreview()"></textarea></div>
-        <div class="field"><label>GitHub</label><input id="f-github" placeholder="github.com/username" oninput="updatePreview()"></div>
-        <div class="field"><label>LinkedIn</label><input id="f-linkedin" placeholder="linkedin.com/in/username" oninput="updatePreview()"></div>
-        <div class="field"><label>개인 웹사이트</label><input id="f-website" placeholder="yoursite.com" oninput="updatePreview()"></div>
-        <div class="field">
-          <label>템플릿 선택</label>
-          <div class="template-grid">
-            <button class="template-btn active" onclick="setTemplate('modern',this)">
-              <div class="template-swatch" style="background:#0A0A0F;border:2px solid #00D4FF"></div>
-              <span class="template-name">Modern</span>
-            </button>
-            <button class="template-btn" onclick="setTemplate('classic',this)">
-              <div class="template-swatch" style="background:#FAF7F2;border:2px solid #C9A96E"></div>
-              <span class="template-name">Classic</span>
-            </button>
-            <button class="template-btn" onclick="setTemplate('bold',this)">
-              <div class="template-swatch" style="background:#FAFAFA;border:2px solid #FF3366"></div>
-              <span class="template-name">Bold</span>
-            </button>
-            <button class="template-btn" onclick="setTemplate('minimal',this)">
-              <div class="template-swatch" style="background:#F5F5F5;border:2px solid #1A1A1A"></div>
-              <span class="template-name">Minimal</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Step 3 -->
-      <div class="step-page" id="page-3">
-        <button class="btn-ai" id="ai-btn" onclick="generateAI()">✦ AI로 자동 생성</button>
-        <div class="ai-success" id="ai-success">
-          <div class="ai-success-title">✓ AI 생성 완료!</div>
-          <div class="ai-success-text" id="ai-preview-text"></div>
-        </div>
-        <button class="btn-outline" onclick="downloadPDF()">📄 PDF 다운로드</button>
-        <button class="btn-outline" onclick="switchTab('portfolio', document.querySelectorAll('.tab')[1])">🌐 포트폴리오 보기</button>
-        <div style="margin-top:16px;padding:14px;background:rgba(255,107,205,0.07);border:1px solid rgba(255,107,205,0.2);border-radius:10px">
-          <div style="font-size:11px;color:#FF6BCD;font-weight:700;margin-bottom:6px">💡 배포 팁</div>
-          <div style="font-size:12px;color:var(--sub);line-height:1.7">이 HTML 파일을 Vercel, Netlify, 또는 GitHub Pages에 업로드하면 즉시 배포 가능합니다.</div>
-        </div>
-      </div>
-
-    </div>
-
-    <div class="panel-nav">
-      <button class="nav-prev" id="btn-prev" onclick="prevStep()" style="display:none">← 이전</button>
-      <button class="nav-next" id="btn-next" onclick="nextStep()">다음 →</button>
-    </div>
-  </div>
-
-  <!-- Right Preview -->
-  <div class="preview-area">
-    <div class="preview-header">
-      <div class="preview-label">실시간 미리보기</div>
-      <div class="template-quick">
-        <button class="tq-btn active" style="background:#0A0A0F" onclick="setTemplate('modern',null,this)" title="Modern"></button>
-        <button class="tq-btn" style="background:#FAF7F2" onclick="setTemplate('classic',null,this)" title="Classic"></button>
-        <button class="tq-btn" style="background:#FF3366" onclick="setTemplate('bold',null,this)" title="Bold"></button>
-        <button class="tq-btn" style="background:#1A1A1A" onclick="setTemplate('minimal',null,this)" title="Minimal"></button>
+      <div class="domain-card" style="--domain-color:#1B3A6B" onclick="switchDomain(3,this)">
+        <div class="d-label">N4</div>
+        <div class="d-name">🏠 주거</div>
+        <div class="d-best">최고: 성동구 (1.000)</div>
+        <div class="d-worst">최저: 강동구 (0.000)</div>
       </div>
     </div>
-    <div id="resume-preview"></div>
-    <div id="portfolio-section" style="display:none"></div>
+    <div class="chart-wrap-lg">
+      <canvas id="barChart"></canvas>
+    </div>
   </div>
 </div>
+
+<!-- 섹션3: 히트맵 -->
+<div class="section-row-2">
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:#8B5CF6"></span>전체 히트맵 — 25개 자치구 × 4개 영역</div>
+    <div class="card-sub">색이 짙을수록 점수가 높음 (녹색=高, 적색=低)</div>
+    <div class="heatmap-wrap">
+      <table class="heatmap" id="heatmapTable"></table>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="dot" style="background:var(--accent)"></span>CFEI 도넛 차트</div>
+    <div class="card-sub">상위 / 중위 / 하위 3개 그룹 분포</div>
+    <div class="chart-wrap">
+      <canvas id="donutChart"></canvas>
+    </div>
+    <div style="margin-top:12px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <div style="width:12px;height:12px;border-radius:2px;background:#0D8A7A;flex-shrink:0;"></div>
+        <span style="font-size:12px;color:var(--dark);font-weight:600;">상위 그룹 (0.6 이상)</span>
+        <span style="margin-left:auto;font-family:'DM Mono';font-size:12px;color:var(--teal);">10개 구</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <div style="width:12px;height:12px;border-radius:2px;background:#F59E0B;flex-shrink:0;"></div>
+        <span style="font-size:12px;color:var(--dark);font-weight:600;">중위 그룹 (0.5~0.6)</span>
+        <span style="margin-left:auto;font-family:'DM Mono';font-size:12px;color:var(--accent);">9개 구</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="width:12px;height:12px;border-radius:2px;background:#E05C5C;flex-shrink:0;"></div>
+        <span style="font-size:12px;color:var(--dark);font-weight:600;">하위 그룹 (0.5 미만)</span>
+        <span style="margin-left:auto;font-family:'DM Mono';font-size:12px;color:var(--red);">6개 구</span>
+      </div>
+    </div>
+    <!-- 정책 시사점 -->
+    <div style="margin-top:16px;padding:12px;background:var(--light);border-radius:10px;border-left:3px solid var(--red);">
+      <div style="font-size:11px;font-weight:700;color:var(--red);margin-bottom:6px;">⚠️ 하위 구 우선 투자 필요</div>
+      <div style="font-size:11px;color:var(--gray);line-height:1.6;">강동구 · 종로구 · 금천구 · 강서구 · 중구 · 용산구는 육아 인프라 투자 사각지대. 자치구별 취약 영역 맞춤형 정책 필요.</div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  2026 서울시 빅데이터 활용 경진대회 분석부문 · CFEI(Child-Friendly Environment Index) · 데이터 출처: 서울시 빅데이터캠퍼스, 서울 열린데이터광장, 공공데이터포털
+</footer>
 
 <script>
-  let currentStep = 0, currentTemplate = 'modern', aiGenerated = null, expCount = 1, eduCount = 1, activeTab = 'resume';
+// ── 데이터 ──
+const DATA = [
+  { gu:"노원구",  n1:0.527, n2:0.586, n3:0.786, n4:0.870, total:0.682 },
+  { gu:"성동구",  n1:0.669, n2:0.370, n3:0.691, n4:1.000, total:0.666 },
+  { gu:"성북구",  n1:0.595, n2:0.582, n3:0.681, n4:0.789, total:0.657 },
+  { gu:"서초구",  n1:0.373, n2:0.450, n3:0.967, n4:0.847, total:0.633 },
+  { gu:"도봉구",  n1:0.709, n2:0.533, n3:0.480, n4:0.763, total:0.624 },
+  { gu:"관악구",  n1:0.505, n2:0.418, n3:0.729, n4:0.905, total:0.624 },
+  { gu:"마포구",  n1:0.459, n2:0.401, n3:0.757, n4:0.855, total:0.600 },
+  { gu:"동대문구",n1:0.458, n2:0.470, n3:0.556, n4:0.894, total:0.590 },
+  { gu:"은평구",  n1:0.522, n2:0.413, n3:0.749, n4:0.734, total:0.588 },
+  { gu:"서대문구",n1:0.570, n2:0.379, n3:0.683, n4:0.729, total:0.575 },
+  { gu:"송파구",  n1:0.272, n2:0.568, n3:0.774, n4:0.705, total:0.569 },
+  { gu:"강북구",  n1:0.617, n2:0.356, n3:0.581, n4:0.765, total:0.569 },
+  { gu:"동작구",  n1:0.585, n2:0.615, n3:0.516, n4:0.528, total:0.566 },
+  { gu:"광진구",  n1:0.596, n2:0.472, n3:0.464, n4:0.732, total:0.566 },
+  { gu:"강남구",  n1:0.303, n2:0.638, n3:0.779, n4:0.553, total:0.561 },
+  { gu:"구로구",  n1:0.557, n2:0.481, n3:0.570, n4:0.645, total:0.559 },
+  { gu:"양천구",  n1:0.514, n2:0.647, n3:0.633, n4:0.395, total:0.548 },
+  { gu:"영등포구",n1:0.470, n2:0.343, n3:0.546, n4:0.748, total:0.517 },
+  { gu:"중랑구",  n1:0.504, n2:0.395, n3:0.543, n4:0.608, total:0.505 },
+  { gu:"용산구",  n1:0.501, n2:0.276, n3:0.554, n4:0.695, total:0.493 },
+  { gu:"중구",    n1:0.533, n2:0.334, n3:0.389, n4:0.617, total:0.465 },
+  { gu:"강서구",  n1:0.461, n2:0.476, n3:0.784, n4:0.189, total:0.462 },
+  { gu:"금천구",  n1:0.618, n2:0.286, n3:0.427, n4:0.516, total:0.455 },
+  { gu:"종로구",  n1:0.700, n2:0.085, n3:0.202, n4:0.691, total:0.414 },
+  { gu:"강동구",  n1:0.457, n2:0.463, n3:0.657, n4:0.000, total:0.385 },
+];
 
-  const STEPS = [
-    ['기본 정보','이름, 연락처 등 기본 정보를 입력하세요'],
-    ['경력 & 학력','경력과 학력 정보를 추가하세요'],
-    ['스킬 & 링크','기술 스택과 소셜 링크를 입력하세요'],
-    ['생성 & 다운로드','AI로 내용을 생성하고 다운로드하세요'],
-  ];
+const COLORS = {
+  n1: '#E05C5C', n2: '#0D8A7A', n3: '#F59E0B', n4: '#1B3A6B',
+  top: '#0D8A7A', mid: '#F59E0B', bot: '#E05C5C',
+};
 
-  const T = {
-    modern:  {bg:'#0A0A0F', card:'#111118', accent:'#00D4FF', text:'#F0F0FF', sub:'#7070AA', border:'#1E1E30', font:"'DM Mono',monospace"},
-    classic: {bg:'#FAF7F2', card:'#FFFFFF',  accent:'#C9A96E', text:'#1A1A1A', sub:'#666',   border:'#E8E0D0', font:"Georgia,serif"},
-    bold:    {bg:'#FAFAFA', card:'#FFFFFF',  accent:'#FF3366', text:'#0A0A0A', sub:'#555',   border:'#EBEBEB', font:"'Helvetica Neue',sans-serif"},
-    minimal: {bg:'#F5F5F5', card:'#FFFFFF',  accent:'#1A1A1A', text:'#0A0A0A', sub:'#888',   border:'#E0E0E0', font:"Georgia,serif"},
-  };
+// ── 순위 리스트 ──
+function buildRankList() {
+  const container = document.getElementById('rankList');
+  const maxScore = DATA[0].total;
 
-  function getData() {
-    const exps = [...document.querySelectorAll('#exp-list .exp-card')].map(c => ({
-      company: c.querySelector('.ec-company').value,
-      role:    c.querySelector('.ec-role').value,
-      period:  c.querySelector('.ec-period').value,
-      desc:    c.querySelector('.ec-desc').value,
-    }));
-    const edus = [...document.querySelectorAll('#edu-list .exp-card')].map(c => ({
-      school: c.querySelector('.ed-school').value,
-      degree: c.querySelector('.ed-degree').value,
-      year:   c.querySelector('.ed-year').value,
-    }));
-    return {
-      name: document.getElementById('f-name').value,
-      title: document.getElementById('f-title').value,
-      email: document.getElementById('f-email').value,
-      phone: document.getElementById('f-phone').value,
-      location: document.getElementById('f-location').value,
-      summary: document.getElementById('f-summary').value,
-      skills: document.getElementById('f-skills').value,
-      github: document.getElementById('f-github').value,
-      linkedin: document.getElementById('f-linkedin').value,
-      website: document.getElementById('f-website').value,
-      experience: exps, education: edus,
-    };
-  }
+  // 상위 10개 + 하위 5개만 표시
+  const displayData = DATA.slice(0, 10).concat(DATA.slice(20));
 
-  function sec(title, content, accent, border) {
-    if (!content) return '';
-    return `<div class="resume-section">
-      <div class="section-header">
-        <span class="section-ttl" style="color:${accent}">${title}</span>
-        <div class="section-line" style="background:${border}"></div>
-      </div>${content}</div>`;
-  }
+  displayData.forEach((d, idx) => {
+    const realIdx = idx < 10 ? idx : idx + 10;
+    const rank = realIdx + 1;
+    let rankClass = '';
+    let rankStyle = '';
+    if (rank === 1) { rankClass = 'gold'; }
+    else if (rank === 2) { rankClass = 'silver'; }
+    else if (rank === 3) { rankClass = 'bronze'; }
+    else if (rank >= 21) { rankClass = 'red'; }
 
-  function updatePreview() {
-    const d = getData(), t = T[currentTemplate];
-    const skillTags = d.skills ? d.skills.split(',').map(s=>s.trim()).filter(Boolean)
-      .map(s=>`<span class="skill-tag" style="background:${t.accent}18;color:${t.accent};border:1px solid ${t.accent}44">${s}</span>`).join('') : '';
-    const expHtml = d.experience.filter(e=>e.company).map((e,i)=>`
-      <div class="exp-item">
-        <div class="exp-top">
-          <div>
-            <div class="exp-company" style="color:${t.text}">${e.company}</div>
-            <div class="exp-role-txt" style="color:${t.accent}">${e.role}</div>
-          </div>
-          <div class="exp-period" style="color:${t.sub}">${e.period}</div>
-        </div>
-        ${(aiGenerated?.experience?.[i]||e.desc)?`<div class="exp-desc" style="color:${t.sub}">${aiGenerated?.experience?.[i]||e.desc}</div>`:''}
-      </div>`).join('');
-    const eduHtml = d.education.filter(e=>e.school).map(e=>`
-      <div class="edu-item">
-        <div><div style="font-size:13px;font-weight:600;color:${t.text}">${e.school}</div><div style="font-size:12px;color:${t.sub}">${e.degree}</div></div>
-        <div style="font-size:11px;color:${t.sub}">${e.year}</div>
-      </div>`).join('');
-    const contacts = [d.email&&`✉ ${d.email}`,d.phone&&`📞 ${d.phone}`,d.location&&`📍 ${d.location}`].filter(Boolean)
-      .map(s=>`<span>${s}</span>`).join('');
-    const links = [d.github&&`🐙 ${d.github}`,d.linkedin&&`💼 ${d.linkedin}`,d.website&&`🌐 ${d.website}`].filter(Boolean)
-      .map(s=>`<span style="color:${t.accent}">${s}</span>`).join('');
-    const summary = aiGenerated?.summary || d.summary;
+    let itemClass = '';
+    if (rank === 1) itemClass = 'top1';
+    else if (rank === 2) itemClass = 'top2';
+    else if (rank === 3) itemClass = 'top3';
+    else if (rank >= 21) itemClass = 'bot';
 
-    document.getElementById('resume-preview').innerHTML = `
-      <div class="resume-card" style="background:${t.card}">
-        <div class="resume-accent-bar" style="background:${t.accent}"></div>
-        <div class="resume-inner" style="font-family:${t.font}">
-          <div class="resume-name" style="color:${t.text}">${d.name||'홍길동'}</div>
-          <div class="resume-title-row" style="color:${t.accent}">${d.title||'Software Engineer'}</div>
-          <div class="resume-contacts" style="color:${t.sub}">${contacts}</div>
-          ${sec('소개', summary?`<p style="font-size:13px;line-height:1.8;color:${t.sub}">${summary}</p>`:'', t.accent, t.border)}
-          ${sec('경력', expHtml, t.accent, t.border)}
-          ${sec('학력', eduHtml, t.accent, t.border)}
-          ${sec('스킬', skillTags?`<div class="skill-tags">${skillTags}</div>`:'', t.accent, t.border)}
-          ${sec('링크', links?`<div class="link-row">${links}</div>`:'', t.accent, t.border)}
-        </div>
-      </div>`;
+    const barColor = rank <= 10 ? COLORS.top : rank <= 20 ? COLORS.mid : COLORS.bot;
+    const pct = ((d.total / maxScore) * 100).toFixed(1);
 
-    if (activeTab === 'portfolio') {
-      const skillTagsP = d.skills ? d.skills.split(',').map(s=>s.trim()).filter(Boolean)
-        .map(s=>`<span style="background:rgba(124,110,255,0.12);color:var(--accent);border:1px solid rgba(124,110,255,0.3);border-radius:20px;padding:4px 14px;font-size:12px">${s}</span>`).join('') : '';
-      document.getElementById('portfolio-section').innerHTML = `
-        <div class="portfolio-card">
-          <div class="portfolio-tag">포트폴리오 페이지</div>
-          <div class="portfolio-name">${d.name||'Your Name'}</div>
-          <div class="portfolio-subtitle">${d.title||'Your Title'}</div>
-          <div class="portfolio-grid">
-            <div class="portfolio-item"><div class="portfolio-item-icon">🚀</div><div class="portfolio-item-label">프로젝트</div></div>
-            <div class="portfolio-item"><div class="portfolio-item-icon">🏢</div><div class="portfolio-item-label">경력</div></div>
-            <div class="portfolio-item"><div class="portfolio-item-icon">📬</div><div class="portfolio-item-label">연락처</div></div>
-          </div>
-          ${skillTagsP?`<div style="display:flex;flex-wrap:wrap;gap:8px">${skillTagsP}</div>`:''}
-        </div>`;
+    if (idx === 10) {
+      const sep = document.createElement('div');
+      sep.style.cssText = 'text-align:center;font-size:11px;color:var(--gray);padding:4px;';
+      sep.textContent = '···  21~25위  ···';
+      container.appendChild(sep);
+    }
+
+    const el = document.createElement('div');
+    el.className = `rank-item ${itemClass}`;
+    el.innerHTML = `
+      <div class="rank-no ${rankClass}">${rank}</div>
+      <div class="rank-gu">${d.gu}</div>
+      <div class="rank-bar-wrap"><div class="rank-bar" style="width:${pct}%;background:${barColor}"></div></div>
+      <div class="rank-score">${d.total.toFixed(3)}</div>
+    `;
+    el.addEventListener('click', () => updateRadar([d], true));
+    container.appendChild(el);
+  });
+}
+
+// ── 레이더 차트 ──
+let radarChart;
+const RADAR_COLORS_POOL = [
+  {border:'#0D8A7A', bg:'rgba(13,138,122,0.15)'},
+  {border:'#1B3A6B', bg:'rgba(27,58,107,0.15)'},
+  {border:'#E05C5C', bg:'rgba(224,92,92,0.15)'},
+  {border:'#F59E0B', bg:'rgba(245,158,11,0.15)'},
+];
+
+let selectedGus = [DATA[0], DATA[3], DATA[14], DATA[24]]; // 초기: 노원, 서초, 강남, 강동
+
+function updateRadar(newItems, replace=false) {
+  if (replace) {
+    if (selectedGus.find(g => g.gu === newItems[0].gu)) {
+      selectedGus = selectedGus.filter(g => g.gu !== newItems[0].gu);
+    } else {
+      selectedGus = [...selectedGus.slice(-3), ...newItems];
     }
   }
 
-  function goStep(n) {
-    document.getElementById(`page-${currentStep}`).classList.remove('active');
-    document.getElementById(`dot-${currentStep}`).className = `step-dot ${currentStep < n ? 'done' : 'todo'}`;
-    currentStep = n;
-    document.getElementById(`page-${n}`).classList.add('active');
-    document.getElementById(`dot-${n}`).className = 'step-dot active';
-    document.getElementById('step-title').textContent = STEPS[n][0];
-    document.getElementById('step-desc').textContent = STEPS[n][1];
-    document.getElementById('btn-prev').style.display = n > 0 ? '' : 'none';
-    document.getElementById('btn-next').style.display = n < 3 ? '' : 'none';
-  }
-  function nextStep() { if (currentStep < 3) goStep(currentStep + 1); }
-  function prevStep() { if (currentStep > 0) goStep(currentStep - 1); }
+  const datasets = selectedGus.map((d, i) => ({
+    label: d.gu,
+    data: [d.n1, d.n2, d.n3, d.n4],
+    borderColor: RADAR_COLORS_POOL[i % 4].border,
+    backgroundColor: RADAR_COLORS_POOL[i % 4].bg,
+    borderWidth: 2, pointRadius: 4, pointHoverRadius: 6,
+  }));
 
-  function setTemplate(name, panelBtn, quickBtn) {
-    currentTemplate = name;
-    if (panelBtn) { document.querySelectorAll('.template-btn').forEach(b=>b.classList.remove('active')); panelBtn.classList.add('active'); }
-    if (quickBtn) { document.querySelectorAll('.tq-btn').forEach(b=>b.classList.remove('active')); quickBtn.classList.add('active'); }
-    updatePreview();
-  }
+  radarChart.data.datasets = datasets;
+  radarChart.update();
 
-  function switchTab(tab, el) {
-    activeTab = tab;
-    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-    el.classList.add('active');
-    document.getElementById('portfolio-section').style.display = tab === 'portfolio' ? 'block' : 'none';
-    updatePreview();
-  }
+  const legend = document.getElementById('radarLegend');
+  legend.innerHTML = selectedGus.map((d, i) => `
+    <span style="display:flex;align-items:center;gap:4px;cursor:pointer;" onclick="updateRadar([DATA.find(x=>x.gu==='${d.gu}')],true)">
+      <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${RADAR_COLORS_POOL[i%4].border}"></span>
+      <span>${d.gu} (${d.total.toFixed(3)})</span>
+    </span>
+  `).join('');
+}
 
-  function addExp() {
-    expCount++;
-    const div = document.createElement('div'); div.className = 'exp-card';
-    div.innerHTML = `<div class="exp-card-header"><span class="exp-card-label">경력 ${expCount}</span><button class="del-btn" onclick="this.closest('.exp-card').remove();updatePreview()">삭제</button></div>
-      <div class="field"><label>회사명</label><input placeholder="회사명" class="ec-company" oninput="updatePreview()"></div>
-      <div class="field"><label>직책</label><input placeholder="역할/직책" class="ec-role" oninput="updatePreview()"></div>
-      <div class="field"><label>기간</label><input placeholder="2022.01 ~ 2024.03" class="ec-period" oninput="updatePreview()"></div>
-      <div class="field"><label>업무 내용</label><textarea rows="3" placeholder="주요 업무와 성과를 입력하세요" class="ec-desc" oninput="updatePreview()"></textarea></div>`;
-    document.getElementById('exp-list').appendChild(div);
-  }
-
-  function addEdu() {
-    eduCount++;
-    const div = document.createElement('div'); div.className = 'exp-card';
-    div.innerHTML = `<div class="exp-card-header"><span class="exp-card-label">학력 ${eduCount}</span><button class="del-btn" onclick="this.closest('.exp-card').remove();updatePreview()">삭제</button></div>
-      <div class="field"><label>학교명</label><input placeholder="대학교" class="ed-school" oninput="updatePreview()"></div>
-      <div class="field"><label>전공/학위</label><input placeholder="컴퓨터공학과 학사" class="ed-degree" oninput="updatePreview()"></div>
-      <div class="field"><label>졸업연도</label><input placeholder="2022" class="ed-year" oninput="updatePreview()"></div>`;
-    document.getElementById('edu-list').appendChild(div);
-  }
-
-  async function generateAI() {
-    const d = getData(), btn = document.getElementById('ai-btn');
-    btn.disabled = true;
-    btn.innerHTML = 'AI 생성 중 <span class="dot"></span><span class="dot"></span><span class="dot"></span>';
-    try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514', max_tokens: 1000,
-          messages: [{role:'user', content:`다음 정보로 한국어 이력서 내용 생성:\n이름:${d.name}, 직함:${d.title}\n경력:${d.experience.map(e=>`${e.company}(${e.role}):${e.desc}`).join(', ')}\n스킬:${d.skills}\n\nJSON만 응답(마크다운 없이):{"summary":"3-4문장 자기소개","experience":["경력별 개선 설명 배열"]}`}]
-        })
-      });
-      const data = await res.json();
-      aiGenerated = JSON.parse(data.content[0].text.replace(/```json|```/g,'').trim());
-    } catch(e) {
-      aiGenerated = {
-        summary: `${d.name||'지원자'}는 ${d.title||'해당 분야'}에서 뛰어난 전문성을 갖춘 인재입니다. 다양한 프로젝트 경험과 실무 역량을 보유하고 있으며, 창의적 문제 해결 능력으로 팀에 기여합니다.`,
-        experience: d.experience.map(e=>e.desc)
-      };
+function initRadar() {
+  const ctx = document.getElementById('radarChart').getContext('2d');
+  radarChart = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: ['N1. 안전', 'N2. 돌봄·교육', 'N3. 여가', 'N4. 주거'],
+      datasets: []
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        r: {
+          min: 0, max: 1,
+          ticks: { stepSize: 0.25, font: {size: 10}, color: '#94A3B8' },
+          grid: { color: '#E2E8F0' },
+          pointLabels: { font: {size: 12, weight: '700'}, color: '#1E293B' },
+        }
+      },
+      plugins: { legend: { display: false } },
     }
-    btn.disabled = false; btn.textContent = '✦ AI 재생성';
-    const box = document.getElementById('ai-success'); box.classList.add('show');
-    document.getElementById('ai-preview-text').textContent = aiGenerated.summary.slice(0,120)+'...';
-    updatePreview();
-  }
+  });
+  updateRadar(selectedGus, false);
+}
 
-  function downloadPDF() {
-    const t = T[currentTemplate];
-    const win = window.open('','_blank');
-    win.document.write(`<!DOCTYPE html><html><head><title>이력서</title>
-      <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800&display=swap" rel="stylesheet">
-      <style>*{box-sizing:border-box;margin:0;padding:0}body{background:${t.bg};font-family:'Pretendard',sans-serif;padding:30px}
-      .resume-card{border-radius:12px;overflow:hidden}.resume-accent-bar{height:4px}.resume-inner{padding:36px 40px}
-      .resume-name{font-size:26px;font-weight:800;margin-bottom:4px}.resume-title-row{font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px}
-      .resume-contacts{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;margin-bottom:28px}.resume-section{margin-bottom:22px}
-      .section-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}.section-ttl{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase}
-      .section-line{flex:1;height:1px}.exp-item{margin-bottom:14px}.exp-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:3px}
-      .exp-company{font-size:14px;font-weight:700}.exp-role-txt{font-size:12px;margin-bottom:4px}.exp-period{font-size:11px;white-space:nowrap}
-      .exp-desc{font-size:12px;line-height:1.7}.edu-item{display:flex;justify-content:space-between;margin-bottom:8px}
-      .skill-tags{display:flex;flex-wrap:wrap;gap:7px}.skill-tag{border-radius:20px;padding:4px 12px;font-size:12px;font-weight:500}
-      .link-row{display:flex;gap:14px;flex-wrap:wrap;font-size:12px}@media print{body{padding:0}}</style>
-    </head><body>${document.getElementById('resume-preview').innerHTML}<script>window.onload=()=>{window.print()}<\/script></body></html>`);
-    win.document.close();
-  }
+// ── 바 차트 ──
+let barChart;
+const DOMAIN_KEYS = ['n1','n2','n3','n4'];
+const DOMAIN_COLORS = [COLORS.n1, COLORS.n2, COLORS.n3, COLORS.n4];
+const DOMAIN_LABELS = ['N1. 안전', 'N2. 돌봄·교육', 'N3. 여가', 'N4. 주거'];
 
-  updatePreview();
+let currentDomain = 0;
+
+function switchDomain(idx, el) {
+  document.querySelectorAll('.domain-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  currentDomain = idx;
+  updateBarChart();
+}
+
+function updateBarChart() {
+  const key = DOMAIN_KEYS[currentDomain];
+  const sorted = [...DATA].sort((a,b) => b[key] - a[key]);
+  const labels = sorted.map(d => d.gu);
+  const values = sorted.map(d => d[key]);
+  const bgColors = values.map((v, i) => {
+    if (i === 0) return DOMAIN_COLORS[currentDomain];
+    if (i === sorted.length - 1) return '#E05C5C';
+    return DOMAIN_COLORS[currentDomain] + '99';
+  });
+
+  barChart.data.labels = labels;
+  barChart.data.datasets[0].data = values;
+  barChart.data.datasets[0].backgroundColor = bgColors;
+  barChart.data.datasets[0].label = DOMAIN_LABELS[currentDomain];
+  barChart.update();
+}
+
+function initBarChart() {
+  const ctx = document.getElementById('barChart').getContext('2d');
+  barChart = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: [], datasets: [{ data: [], borderRadius: 4, borderSkipped: false }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      indexAxis: 'y',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.parsed.x.toFixed(3)}`
+          }
+        }
+      },
+      scales: {
+        x: { min: 0, max: 1.05, grid: { color: '#F1F5F9' }, ticks: { font: {size: 10}, color: '#94A3B8' } },
+        y: { grid: { display: false }, ticks: { font: {size: 11}, color: '#1E293B' } }
+      }
+    }
+  });
+  updateBarChart();
+}
+
+// ── 도넛 차트 ──
+function initDonut() {
+  const ctx = document.getElementById('donutChart').getContext('2d');
+  const top = DATA.filter(d => d.total >= 0.6).length;
+  const mid = DATA.filter(d => d.total >= 0.5 && d.total < 0.6).length;
+  const bot = DATA.filter(d => d.total < 0.5).length;
+
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['상위 (0.6 이상)', '중위 (0.5~0.6)', '하위 (0.5 미만)'],
+      datasets: [{
+        data: [top, mid, bot],
+        backgroundColor: [COLORS.top, COLORS.mid, COLORS.bot],
+        borderWidth: 3, borderColor: '#fff',
+        hoverOffset: 8,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      cutout: '65%',
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed}개 구` } }
+      }
+    },
+    plugins: [{
+      id: 'center',
+      beforeDraw(chart) {
+        const { width, height, ctx } = chart;
+        ctx.restore();
+        ctx.font = 'bold 28px DM Mono';
+        ctx.fillStyle = '#1E293B';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('25', width/2, height/2 - 8);
+        ctx.font = '11px Noto Sans KR';
+        ctx.fillStyle = '#64748B';
+        ctx.fillText('자치구', width/2, height/2 + 14);
+        ctx.save();
+      }
+    }]
+  });
+}
+
+// ── 히트맵 ──
+function scoreToColor(val) {
+  const r = Math.round(224 + (27 - 224) * val);
+  const g = Math.round(92 + (58 - 92) * val * 0.3 + (138 - 92) * val);
+  const b = Math.round(92 + (107 - 92) * val);
+  // 간단하게: 낮으면 빨강, 높으면 녹색
+  const red   = Math.round(224 * (1 - val) + 13 * val);
+  const green = Math.round(92  * (1 - val) + 138 * val);
+  const blue  = Math.round(92  * (1 - val) + 122 * val);
+  return `rgba(${red},${green},${blue},0.85)`;
+}
+
+function textColor(val) { return val > 0.55 ? '#fff' : '#1E293B'; }
+
+function buildHeatmap() {
+  const table = document.getElementById('heatmapTable');
+  const headers = ['자치구','N1 안전','N2 돌봄','N3 여가','N4 주거','CFEI'];
+  let html = '<thead><tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr></thead><tbody>';
+
+  DATA.forEach((d, i) => {
+    const rank = i + 1;
+    const vals = [d.n1, d.n2, d.n3, d.n4, d.total];
+    html += `<tr>
+      <td class="gu-name">${rank}. ${d.gu}</td>
+      ${vals.map(v => {
+        const bg = scoreToColor(v);
+        const tc = textColor(v);
+        return `<td style="background:${bg};color:${tc};font-weight:600;">${v.toFixed(3)}</td>`;
+      }).join('')}
+    </tr>`;
+  });
+
+  html += '</tbody>';
+  table.innerHTML = html;
+}
+
+// ── 초기화 ──
+buildRankList();
+initRadar();
+initBarChart();
+initDonut();
+buildHeatmap();
 </script>
 </body>
 </html>
