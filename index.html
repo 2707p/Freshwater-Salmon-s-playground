@@ -1,307 +1,490 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>서울시 육아친화환경 종합지수(CFEI) 지도 시각화</title>
-    
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
-    
-    <style>
-        :root {
-            --teal: #0D8A7A;
-            --mint: #2DC4B0;
-            --yellow: #F4A623;
-            --red: #E05C5C;
-            --dark-red: #B33A3A;
-            --dark: #1E293B;
-            --light: #F4F7FB;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>미적분 주제탐구보고서</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&family=Noto+Sans+KR:wght@300;400;500&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root {
+    --ink: #1a1a2e;
+    --paper: #faf8f3;
+    --accent: #c0392b;
+    --accent2: #2980b9;
+    --muted: #7f8c8d;
+    --border: #d5cfc4;
+    --highlight: #f9f1e4;
+  }
 
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Noto Sans KR', sans-serif;
-            background-color: var(--light);
-        }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
-        #map {
-            width: 100%;
-            height: 100vh;
-            background: #EAF0F6; /* 바다/배경색 */
-        }
+  body {
+    background: #e8e4dc;
+    font-family: 'Noto Sans KR', sans-serif;
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
 
-        /* 정보 패널 (우측 상단) */
-        .info {
-            padding: 16px 20px;
-            font: 14px/1.6 'Noto Sans KR', Arial, Helvetica, sans-serif;
-            background: rgba(255, 255, 255, 0.95);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            border-radius: 12px;
-            color: var(--dark);
-            min-width: 250px;
-        }
-        .info h4 {
-            margin: 0 0 10px 0;
-            color: var(--teal);
-            font-size: 18px;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-        }
-        .info h5 {
-            margin: 0 0 5px 0;
-            color: #64748B;
-            font-size: 14px;
-            font-weight: 500;
-        }
-        .score-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 4px;
-            font-size: 13px;
-        }
-        .score-row.total {
-            font-weight: 700;
-            font-size: 15px;
-            color: var(--teal);
-            border-top: 1px solid #E2E8F0;
-            padding-top: 8px;
-            margin-top: 8px;
-        }
-        .score-label {
-            color: #64748B;
-        }
+  .page {
+    max-width: 860px;
+    margin: 0 auto;
+    background: var(--paper);
+    box-shadow: 0 4px 40px rgba(0,0,0,0.18), 0 1px 0 rgba(255,255,255,0.8) inset;
+    border-radius: 2px;
+    overflow: hidden;
+    animation: fadeUp 0.7s ease both;
+  }
 
-        /* 범례 패널 (우측 하단) */
-        .legend {
-            line-height: 24px;
-            color: var(--dark);
-            background: rgba(255, 255, 255, 0.95);
-            padding: 12px 16px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            font-size: 12px;
-            font-weight: 500;
-        }
-        .legend i {
-            width: 18px;
-            height: 18px;
-            float: left;
-            margin-right: 8px;
-            opacity: 0.85;
-            border-radius: 3px;
-        }
-        
-        .title-box {
-            position: absolute;
-            top: 20px;
-            left: 50px;
-            z-index: 1000;
-            background: white;
-            padding: 15px 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            border-left: 5px solid var(--teal);
-        }
-        .title-box h1 {
-            margin: 0;
-            font-size: 22px;
-            color: var(--dark);
-            letter-spacing: -0.5px;
-        }
-        .title-box p {
-            margin: 5px 0 0 0;
-            font-size: 13px;
-            color: #64748B;
-        }
-    </style>
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* 헤더 */
+  .header {
+    background: var(--ink);
+    color: white;
+    padding: 48px 56px 36px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 220px; height: 220px;
+    border-radius: 50%;
+    background: rgba(192,57,43,0.18);
+  }
+  .header::after {
+    content: 'f(x)';
+    position: absolute;
+    bottom: 10px; right: 56px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 72px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.05);
+    letter-spacing: -2px;
+  }
+
+  .subject-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  .title {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.4;
+    margin-bottom: 6px;
+  }
+
+  .subtitle {
+    font-size: 13px;
+    color: rgba(255,255,255,0.5);
+    margin-top: 8px;
+    font-weight: 300;
+  }
+
+  /* 메타 행 */
+  .meta-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    border-bottom: 2px solid var(--ink);
+  }
+  .meta-cell {
+    padding: 14px 20px;
+    font-size: 13px;
+    border-right: 1px solid var(--border);
+  }
+  .meta-cell:last-child { border-right: none; }
+  .meta-label { color: var(--muted); font-size: 10px; letter-spacing: 1px; margin-bottom: 4px; text-transform: uppercase; }
+  .meta-value { font-weight: 500; }
+
+  /* 섹션 */
+  .section {
+    border-bottom: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: 110px 1fr;
+  }
+  .section-label {
+    background: var(--highlight);
+    padding: 24px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    border-right: 2px solid var(--ink);
+    display: flex;
+    align-items: flex-start;
+    writing-mode: horizontal-tb;
+    letter-spacing: 0.5px;
+  }
+  .section-body { padding: 0; }
+
+  /* 행 */
+  .row {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    border-bottom: 1px solid var(--border);
+  }
+  .row:last-child { border-bottom: none; }
+  .row-label {
+    padding: 16px 14px;
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 500;
+    border-right: 1px solid var(--border);
+    background: rgba(245,243,238,0.6);
+    display: flex;
+    align-items: flex-start;
+  }
+  .row-content {
+    padding: 16px 20px;
+    font-size: 14px;
+    line-height: 1.8;
+    color: #2c2c2c;
+  }
+
+  /* 주제 행 */
+  .topic-row {
+    padding: 18px 24px;
+    background: var(--highlight);
+    border-bottom: 2px solid var(--ink);
+    font-size: 15px;
+    font-weight: 600;
+    font-family: 'Noto Serif KR', serif;
+  }
+  .topic-label { color: var(--muted); font-size: 12px; font-weight: 400; margin-right: 8px; font-family: 'Noto Sans KR', sans-serif; }
+
+  /* 수식 블록 */
+  .formula-block {
+    background: var(--ink);
+    color: #a8d8ea;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 12px 18px;
+    border-radius: 4px;
+    font-size: 13px;
+    margin: 8px 0;
+    display: inline-block;
+  }
+
+  /* 차트 영역 */
+  .chart-wrap {
+    padding: 20px;
+    background: #fff;
+    border-top: 1px solid var(--border);
+  }
+  .chart-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  canvas { max-width: 100%; }
+
+  /* 태그들 */
+  .tag {
+    display: inline-block;
+    background: var(--ink);
+    color: white;
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 2px;
+    margin: 2px 3px 2px 0;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .tag.accent { background: var(--accent); }
+  .tag.blue { background: var(--accent2); }
+
+  /* 책 추천 */
+  .book-card {
+    display: flex;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px dashed var(--border);
+    align-items: flex-start;
+  }
+  .book-card:last-child { border-bottom: none; }
+  .book-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    font-weight: 600;
+    min-width: 20px;
+    padding-top: 2px;
+  }
+  .book-info { flex: 1; }
+  .book-title { font-weight: 600; font-size: 13px; margin-bottom: 2px; }
+  .book-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+  /* 결론 포인트 */
+  .point {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+    align-items: flex-start;
+  }
+  .point-dot {
+    min-width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    margin-top: 6px;
+  }
+
+  .full-section {
+    padding: 22px 24px;
+    font-size: 14px;
+    line-height: 1.9;
+  }
+
+  .divider {
+    height: 1px;
+    background: linear-gradient(to right, var(--accent), transparent);
+    margin: 14px 0;
+  }
+</style>
 </head>
 <body>
+<div class="page">
 
-    <!-- 지도 제목 영역 -->
-    <div class="title-box">
-        <h1>서울시 육아친화환경 종합지수(CFEI) 지도</h1>
-        <p>색상이 짙은 녹색일수록 육아 인프라가 우수함을 의미합니다.</p>
+  <!-- 헤더 -->
+  <div class="header">
+    <div class="subject-tag">미적분 · 주제탐구보고서</div>
+    <div class="title">로그함수의 미분과 자연현상<br>— 감염병 확산 모델링</div>
+    <div class="subtitle">지수·로그함수의 미분이 현실 데이터를 설명하는 방식에 대한 탐구</div>
+  </div>
+
+  <!-- 메타 -->
+  <div class="meta-row">
+    <div class="meta-cell">
+      <div class="meta-label">교과</div>
+      <div class="meta-value">미적분</div>
     </div>
+    <div class="meta-cell">
+      <div class="meta-label">학번</div>
+      <div class="meta-value">&nbsp;</div>
+    </div>
+    <div class="meta-cell">
+      <div class="meta-label">이름</div>
+      <div class="meta-value">&nbsp;</div>
+    </div>
+  </div>
 
-    <!-- 지도가 렌더링될 컨테이너 -->
-    <div id="map"></div>
+  <!-- 연구 주제 -->
+  <div class="topic-row">
+    <span class="topic-label">연구 주제 :</span>
+    로그함수의 미분을 활용한 감염병 확산 모델(SIR 모델) 분석
+  </div>
 
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    
-    <script>
-        // 1. CSV에서 추출한 실제 분석 데이터 (JSON 형식으로 임베딩)
-        const cfeiData = [
-            {"District": "노원구", "N1_Safety": 0.527, "N2_Care_Edu": 0.586, "N3_Leisure": 0.786, "N4_Housing": 0.87, "Total_Score": 0.682}, 
-            {"District": "성동구", "N1_Safety": 0.669, "N2_Care_Edu": 0.37, "N3_Leisure": 0.691, "N4_Housing": 1.0, "Total_Score": 0.666}, 
-            {"District": "성북구", "N1_Safety": 0.595, "N2_Care_Edu": 0.582, "N3_Leisure": 0.681, "N4_Housing": 0.789, "Total_Score": 0.657}, 
-            {"District": "서초구", "N1_Safety": 0.373, "N2_Care_Edu": 0.45, "N3_Leisure": 0.967, "N4_Housing": 0.847, "Total_Score": 0.633}, 
-            {"District": "도봉구", "N1_Safety": 0.709, "N2_Care_Edu": 0.533, "N3_Leisure": 0.48, "N4_Housing": 0.763, "Total_Score": 0.624}, 
-            {"District": "관악구", "N1_Safety": 0.505, "N2_Care_Edu": 0.418, "N3_Leisure": 0.729, "N4_Housing": 0.905, "Total_Score": 0.624}, 
-            {"District": "마포구", "N1_Safety": 0.459, "N2_Care_Edu": 0.401, "N3_Leisure": 0.757, "N4_Housing": 0.855, "Total_Score": 0.6}, 
-            {"District": "동대문구", "N1_Safety": 0.458, "N2_Care_Edu": 0.47, "N3_Leisure": 0.556, "N4_Housing": 0.894, "Total_Score": 0.59}, 
-            {"District": "은평구", "N1_Safety": 0.522, "N2_Care_Edu": 0.413, "N3_Leisure": 0.749, "N4_Housing": 0.734, "Total_Score": 0.588}, 
-            {"District": "서대문구", "N1_Safety": 0.57, "N2_Care_Edu": 0.379, "N3_Leisure": 0.683, "N4_Housing": 0.729, "Total_Score": 0.575}, 
-            {"District": "송파구", "N1_Safety": 0.272, "N2_Care_Edu": 0.568, "N3_Leisure": 0.774, "N4_Housing": 0.705, "Total_Score": 0.569}, 
-            {"District": "강북구", "N1_Safety": 0.617, "N2_Care_Edu": 0.356, "N3_Leisure": 0.581, "N4_Housing": 0.765, "Total_Score": 0.569}, 
-            {"District": "동작구", "N1_Safety": 0.585, "N2_Care_Edu": 0.615, "N3_Leisure": 0.516, "N4_Housing": 0.528, "Total_Score": 0.566}, 
-            {"District": "광진구", "N1_Safety": 0.596, "N2_Care_Edu": 0.472, "N3_Leisure": 0.464, "N4_Housing": 0.732, "Total_Score": 0.566}, 
-            {"District": "강남구", "N1_Safety": 0.303, "N2_Care_Edu": 0.638, "N3_Leisure": 0.779, "N4_Housing": 0.553, "Total_Score": 0.561}, 
-            {"District": "구로구", "N1_Safety": 0.557, "N2_Care_Edu": 0.481, "N3_Leisure": 0.57, "N4_Housing": 0.645, "Total_Score": 0.559}, 
-            {"District": "양천구", "N1_Safety": 0.514, "N2_Care_Edu": 0.647, "N3_Leisure": 0.633, "N4_Housing": 0.395, "Total_Score": 0.548}, 
-            {"District": "영등포구", "N1_Safety": 0.47, "N2_Care_Edu": 0.343, "N3_Leisure": 0.546, "N4_Housing": 0.748, "Total_Score": 0.517}, 
-            {"District": "중랑구", "N1_Safety": 0.504, "N2_Care_Edu": 0.395, "N3_Leisure": 0.543, "N4_Housing": 0.608, "Total_Score": 0.505}, 
-            {"District": "용산구", "N1_Safety": 0.501, "N2_Care_Edu": 0.276, "N3_Leisure": 0.554, "N4_Housing": 0.695, "Total_Score": 0.493}, 
-            {"District": "중구", "N1_Safety": 0.533, "N2_Care_Edu": 0.334, "N3_Leisure": 0.389, "N4_Housing": 0.617, "Total_Score": 0.465}, 
-            {"District": "강서구", "N1_Safety": 0.461, "N2_Care_Edu": 0.476, "N3_Leisure": 0.784, "N4_Housing": 0.189, "Total_Score": 0.462}, 
-            {"District": "금천구", "N1_Safety": 0.618, "N2_Care_Edu": 0.286, "N3_Leisure": 0.427, "N4_Housing": 0.516, "Total_Score": 0.455}, 
-            {"District": "종로구", "N1_Safety": 0.7, "N2_Care_Edu": 0.085, "N3_Leisure": 0.202, "N4_Housing": 0.691, "Total_Score": 0.414}, 
-            {"District": "강동구", "N1_Safety": 0.457, "N2_Care_Edu": 0.463, "N3_Leisure": 0.657, "N4_Housing": 0.0, "Total_Score": 0.385}
-        ];
+  <!-- 동기 -->
+  <div class="section">
+    <div class="section-label">동&emsp;기</div>
+    <div class="section-body">
+      <div class="row">
+        <div class="row-label">선정 도서</div>
+        <div class="row-content">
+          <div class="book-card">
+            <div class="book-num">①</div>
+            <div class="book-info">
+              <div class="book-title">수학이 필요한 순간 — 인간의 진화부터 현대물리학까지</div>
+              <div class="book-desc">김민형 저 / 인플루엔셜 — 수학이 자연 현상을 설명하는 방식을 친절하게 서술, 미적분의 현실 적용 이해에 도움</div>
+            </div>
+          </div>
+          <div class="book-card">
+            <div class="book-num">②</div>
+            <div class="book-info">
+              <div class="book-title">세상을 바꾼 17가지 방정식</div>
+              <div class="book-desc">이언 스튜어트 저 / 사이언스북스 — 로그·지수 포함 핵심 방정식이 실제 세계에 어떻게 적용되는지 설명</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="row-label">연구 주제를 선정하게 된 이유</div>
+        <div class="row-content">
+          코로나19를 직접 경험하며 뉴스에서 매일 접하던 확진자 그래프와 재생산지수(R값)가 실제로 어떤 수학적 원리에 기반하는지 궁금증을 가지게 되었다. 단순히 그래프가 증가하거나 감소하는 것을 넘어, 그 변화율—즉 미분—이 감염병의 심각성을 나타내는 핵심 지표임을 알게 되었고, 고등학교 미적분에서 배운 지수·로그함수의 미분이 이러한 현상을 수학적으로 기술하는 직접적인 도구가 된다는 점에 흥미를 느껴 탐구 주제로 선정하였다.
+        </div>
+      </div>
+      <div class="row">
+        <div class="row-label">관련 교과 단원</div>
+        <div class="row-content">
+          미적분 — <span class="tag">지수함수의 미분</span><span class="tag">로그함수의 미분</span><span class="tag">자연상수 e</span><span class="tag">함수의 증가·감소</span>
+        </div>
+      </div>
+    </div>
+  </div>
 
-        // 자치구 이름을 키로 하는 데이터 Map 생성 (빠른 검색용)
-        const dataMap = {};
-        cfeiData.forEach(d => {
-            dataMap[d.District] = d;
-        });
+  <!-- 본론 -->
+  <div class="section">
+    <div class="section-label">본&emsp;론</div>
+    <div class="section-body">
+      <div class="row">
+        <div class="row-label">핵심 개념</div>
+        <div class="row-content">
+          <div class="formula-block">(e^x)' = e^x</div>
+          <div class="formula-block">(ln x)' = 1/x</div>
+          <div class="formula-block">(a^x)' = a^x · ln a</div>
+          <br>
+          <strong>자연상수 e</strong>란 극한 <code>lim(1 + 1/n)^n (n→∞) ≈ 2.718</code>으로 정의되며, 지수함수 <em>e<sup>x</sup></em>는 자기 자신을 미분해도 변하지 않는 유일한 함수이다. 이 성질이 연속적으로 변하는 자연 현상을 모델링하는 데 핵심적으로 활용된다.
+        </div>
+      </div>
+      <div class="row">
+        <div class="row-label">진로 관련 개념</div>
+        <div class="row-content">
+          <span class="tag blue">데이터 시각화</span><span class="tag blue">로그 스케일 그래프</span><span class="tag blue">시뮬레이션 알고리즘</span>
+          <br><br>
+          개발자 관점에서, 감염병 시뮬레이션 프로그램은 미분방정식을 수치적으로 계산(오일러 방법 등)하는 알고리즘으로 구현된다. 또한 확진자 수가 수십~수백만에 이를 때 로그 스케일로 그래프를 표현하면 변화율의 추이를 명확히 시각화할 수 있는데, 이것이 <em>(ln x)' = 1/x</em>의 직접적인 응용이다.
+        </div>
+      </div>
+      <div class="row" style="grid-template-columns: 120px 1fr;">
+        <div class="row-label">내용 요약</div>
+        <div class="row-content">
+          <strong>① SIR 모델이란?</strong><br>
+          감염병 확산을 수학적으로 기술하는 가장 기본적인 모델로, 전체 인구를 세 집단으로 나눈다.
+          <br>
+          <span class="tag">S (Susceptible)</span> 감염 가능 집단 &nbsp;
+          <span class="tag accent">I (Infectious)</span> 감염자 집단 &nbsp;
+          <span class="tag">R (Recovered)</span> 회복(면역) 집단
+          <div class="divider"></div>
+          <strong>② 핵심 수식</strong><br>
+          감염자 수 I(t)는 초기에 지수함수적으로 증가한다:
+          <div class="formula-block">I(t) ≈ I₀ · e^((β-γ)t)</div>
+          여기서 β는 감염률, γ는 회복률이다. 이를 로그 변환하면:
+          <div class="formula-block">ln I(t) = ln I₀ + (β-γ)t</div>
+          즉, <strong>로그 스케일에서 감염자 곡선의 기울기 = (β−γ)</strong>이며, 이것이 곧 미분값(변화율)이다.
+          <div class="divider"></div>
+          <strong>③ 기초감염재생산지수 R₀</strong><br>
+          <div class="formula-block">R₀ = β / γ</div>
+          R₀ > 1이면 I(t)의 미분값이 양수 → 감염 확산<br>
+          R₀ < 1이면 I(t)의 미분값이 음수 → 감염 소멸<br><br>
+          즉, 뉴스에서 말하는 "R값이 1을 넘었다"는 것은 수학적으로 <strong>감염자 함수의 도함수가 양수</strong>임을 의미한다.
+        </div>
+      </div>
 
-        // 2. 지도 초기화 (서울 중심부)
-        const map = L.map('map', {
-            zoomControl: false // 기본 줌 컨트롤 숨김 (나중에 위치 조정 가능)
-        }).setView([37.5665, 126.9780], 11.5);
-        
-        // 줌 컨트롤 위치 조정
-        L.control.zoom({ position: 'topright' }).addTo(map);
+      <!-- 차트 -->
+      <div class="chart-wrap">
+        <div class="chart-title">시뮬레이션: SIR 모델 감염자 곡선 (R₀ = 2.5 vs R₀ = 0.8)</div>
+        <canvas id="sirChart" height="200"></canvas>
+      </div>
+    </div>
+  </div>
 
-        // 깔끔한 배경 지도 (CartoDB Positron) 추가
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
-            subdomains: 'abcd',
-            maxZoom: 20
-        }).addTo(map);
+  <!-- 알게 된 점 & 결론 -->
+  <div class="section">
+    <div class="section-label">알게 된 점 &amp; 결론</div>
+    <div class="full-section">
+      <div class="point">
+        <div class="point-dot"></div>
+        <div>지수함수 <em>e<sup>x</sup></em>를 미분하면 자기 자신이 된다는 성질이 단순한 수학 공식이 아니라, 자연에서 "변화율이 현재 상태에 비례하는" 모든 현상을 기술하는 보편적 언어임을 깨달았다. 감염병 확산뿐 아니라 인구 증가, 방사성 붕괴, 복리 계산 등에도 동일하게 적용된다.</div>
+      </div>
+      <div class="point">
+        <div class="point-dot"></div>
+        <div>로그함수의 미분 <em>(ln x)' = 1/x</em>는 데이터를 로그 스케일로 변환할 때 기울기가 곧 변화율(성장률)을 나타내게 해주며, 이것이 데이터 분석과 시각화에서 로그 스케일이 자주 사용되는 수학적 이유임을 이해했다.</div>
+      </div>
+      <div class="point">
+        <div class="point-dot"></div>
+        <div>R₀ (기초감염재생산지수)가 1을 기준으로 감염 확산 여부가 결정된다는 사실은, 수학적으로 도함수의 부호 판정 문제와 정확히 동일하다. 미적분의 "증가·감소 판정"이 공중보건 정책 결정에 직접 활용된다는 점이 인상적이었다.</div>
+      </div>
+      <div class="point">
+        <div class="point-dot"></div>
+        <div>개발자로서, 이러한 미분방정식을 컴퓨터로 수치 계산하는 오일러(Euler) 방법이나 룽게-쿠타(Runge-Kutta) 알고리즘이 실제 시뮬레이션 소프트웨어의 핵심임을 알게 되었고, 수학과 프로그래밍이 긴밀하게 연결되어 있음을 체감했다.</div>
+      </div>
+    </div>
+  </div>
 
-        // 3. 점수에 따른 색상 결정 함수
-        function getColor(score) {
-            return score >= 0.65 ? '#0D8A7A' : // 최상위 (민트/청록) - 노원, 성동 등
-                   score >= 0.60 ? '#2DC4B0' : // 상위
-                   score >= 0.55 ? '#F4A623' : // 중위 (노랑/주황)
-                   score >= 0.45 ? '#E05C5C' : // 하위 (빨강)
-                                   '#B33A3A';  // 최하위 (진한 빨강) - 강동, 종로 등
-        }
+  <!-- 후속 활동 -->
+  <div class="section" style="border-bottom: none;">
+    <div class="section-label">후속 활동 계획 및 다짐</div>
+    <div class="full-section">
+      이번 탐구를 통해 미적분의 개념이 현실 세계와 이렇게 직접적으로 연결되어 있다는 것을 처음으로 실감하였다. 앞으로는 SIR 모델을 실제로 Python 또는 JavaScript로 구현하여 R₀ 값에 따른 감염 곡선 변화를 시각화하는 프로그램을 만들어보고 싶다. 또한 지수·로그 미분이 활용되는 다른 분야(머신러닝의 손실함수, 정보이론의 엔트로피 등)로 탐구를 확장하여 수학과 개발이 연결되는 지점을 더 깊이 이해하고자 한다.
+      <br><br>
+      <span class="tag">Python 시뮬레이션 구현</span>
+      <span class="tag accent">scipy.integrate 활용</span>
+      <span class="tag blue">데이터 시각화 (matplotlib)</span>
+    </div>
+  </div>
 
-        // 4. GeoJSON 스타일 설정 함수
-        function style(feature) {
-            const districtName = feature.properties.name;
-            const districtData = dataMap[districtName];
-            const score = districtData ? districtData.Total_Score : 0;
+</div>
 
-            return {
-                fillColor: getColor(score),
-                weight: 2,
-                opacity: 1,
-                color: 'white', // 경계선 색상
-                dashArray: '3',
-                fillOpacity: 0.85
-            };
-        }
+<script>
+// SIR 모델 시뮬레이션
+function simulateSIR(beta, gamma, days) {
+  let S = 0.999, I = 0.001, R = 0;
+  const result = [];
+  for (let t = 0; t < days; t++) {
+    result.push(parseFloat((I * 1000000).toFixed(0)));
+    const dS = -beta * S * I;
+    const dI = beta * S * I - gamma * I;
+    const dR = gamma * I;
+    S += dS; I += dI; R += dR;
+    if (S < 0) S = 0;
+    if (I < 0) I = 0;
+  }
+  return result;
+}
 
-        // 5. 마우스 호버(Hover) 시 상호작용
-        let geojson;
+const labels = Array.from({length: 120}, (_, i) => i + '일');
+const high = simulateSIR(0.5, 0.2, 120);   // R₀=2.5
+const low  = simulateSIR(0.16, 0.2, 120);  // R₀=0.8
 
-        function highlightFeature(e) {
-            const layer = e.target;
-            layer.setStyle({
-                weight: 4,
-                color: '#1E293B',
-                dashArray: '',
-                fillOpacity: 1
-            });
-            layer.bringToFront();
-            info.update(layer.feature.properties);
-        }
-
-        function resetHighlight(e) {
-            geojson.resetStyle(e.target);
-            info.update();
-        }
-
-        function onEachFeature(feature, layer) {
-            layer.on({
-                mouseover: highlightFeature,
-                mouseout: resetHighlight
-            });
-        }
-
-        // 6. 커스텀 정보 패널 (우측 상단)
-        const info = L.control({position: 'topright'});
-
-        info.onAdd = function (map) {
-            this._div = L.DomUtil.create('div', 'info');
-            this.update();
-            return this._div;
-        };
-
-        info.update = function (props) {
-            if (props) {
-                const districtData = dataMap[props.name];
-                if(districtData) {
-                    this._div.innerHTML = `
-                        <h4>📍 ${props.name}</h4>
-                        <div class="score-row"><span class="score-label">N1. 안전 (범죄,교통)</span> <span>${districtData.N1_Safety.toFixed(3)}</span></div>
-                        <div class="score-row"><span class="score-label">N2. 돌봄·교육 (보육시설)</span> <span>${districtData.N2_Care_Edu.toFixed(3)}</span></div>
-                        <div class="score-row"><span class="score-label">N3. 여가·의료 (공원,병원)</span> <span>${districtData.N3_Leisure.toFixed(3)}</span></div>
-                        <div class="score-row"><span class="score-label">N4. 주거 (전세,인구)</span> <span>${districtData.N4_Housing.toFixed(3)}</span></div>
-                        <div class="score-row total"><span class="score-label" style="color:var(--teal)">CFEI 종합 지수</span> <span>${districtData.Total_Score.toFixed(3)}</span></div>
-                    `;
-                } else {
-                    this._div.innerHTML = `<h4>📍 ${props.name}</h4>데이터 없음`;
-                }
-            } else {
-                this._div.innerHTML = '<h5>지도 위 자치구에 마우스를 올려보세요</h5>';
-            }
-        };
-
-        info.addTo(map);
-
-        // 7. 범례(Legend) 패널 (우측 하단)
-        const legend = L.control({position: 'bottomright'});
-
-        legend.onAdd = function (map) {
-            const div = L.DomUtil.create('div', 'info legend');
-            const grades = [0, 0.45, 0.55, 0.60, 0.65];
-            const labels = ['최하위 (사각지대)', '하위 (보완 시급)', '중위 (평균)', '상위 (양호)', '최상위 (우수)'];
-
-            div.innerHTML = '<strong>CFEI 지수 (높을수록 우수)</strong><br>';
-            
-            for (let i = 0; i < grades.length; i++) {
-                div.innerHTML +=
-                    '<i style="background:' + getColor(grades[i] + 0.01) + '"></i> ' +
-                    labels[i] + '<br>';
-            }
-            return div;
-        };
-
-        legend.addTo(map);
-
-        // 8. 서울시 GeoJSON 데이터 불러오기 및 지도에 렌더링
-        // Github에 공개된 신뢰성 높은 서울시 행정구역 경계 데이터 활용
-        fetch('https://raw.githubusercontent.com/southkorea/seoul-maps/master/kostat/2013/json/seoul_municipalities_geo_simple.json')
-            .then(response => response.json())
-            .then(data => {
-                geojson = L.geoJson(data, {
-                    style: style,
-                    onEachFeature: onEachFeature
-                }).addTo(map);
-            })
-            .catch(error => {
-                console.error('GeoJSON 데이터를 불러오는데 실패했습니다:', error);
-                document.getElementById('map').innerHTML = '<div style="padding:20px; text-align:center; color:red;">지도 데이터를 불러오는 중 오류가 발생했습니다. 인터넷 연결을 확인해주세요.</div>';
-            });
-
-    </script>
+const ctx = document.getElementById('sirChart').getContext('2d');
+new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels,
+    datasets: [
+      {
+        label: 'R₀ = 2.5 (확산)',
+        data: high,
+        borderColor: '#c0392b',
+        backgroundColor: 'rgba(192,57,43,0.08)',
+        borderWidth: 2.5,
+        pointRadius: 0,
+        fill: true,
+        tension: 0.4
+      },
+      {
+        label: 'R₀ = 0.8 (소멸)',
+        data: low,
+        borderColor: '#2980b9',
+        backgroundColor: 'rgba(41,128,185,0.08)',
+        borderWidth: 2.5,
+        pointRadius: 0,
+        fill: true,
+        tension: 0.4
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: {
+        labels: { font: { family: "'Noto Sans KR'" }, color: '#1a1a2e' }
+      },
+      tooltip: { mode: 'index', intersect: false }
+    },
+    scales: {
+      x: {
+        ticks: { maxTicksLimit: 12, font: { size: 11 }, color: '#7f8c8d' },
+        grid: { color: 'rgba(0,0,0,0.05)' }
+      },
+      y: {
+        title: { display: true, text: '감염자 수 (명, 100만 인구 기준)', font: { size: 11 }, color: '#7f8c8d' },
+        ticks: { font: { size: 11 }, color: '#7f8c8d' },
+        grid: { color: 'rgba(0,0,0,0.05)' }
+      }
+    }
+  }
+});
+</script>
 </body>
 </html>
