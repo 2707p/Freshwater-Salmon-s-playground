@@ -1,1 +1,192 @@
+"""
+MEMS 기반 간섭 변조 디스플레이(IMOD) 픽셀 구동 수치해석 시뮬레이터
+본 프로그램은 전송 행렬법(TMM)을 사용하여 미세 변조 에어 갭의 두께 가변성에 가역 매칭되는
+분산 반사율 프로파일 분석 및 Wyman 해석적 근사 CMF 모델 기반의 인간 percibed sRGB 매핑을 수행합니다.
+"""
 
+import numpy as np
+import matplotlib.pyplot as plt
+
+# 가시광 전자기파 대역 정의 (380 nm ~ 780 nm)
+WAVELENGTHS = np.arange(380, 781, 1)
+
+def get_refractive_index_chromium(wl):
+    """
+    Chromium(크롬) 가늘게 성막된 전계 흡수 전극 유전 분산 파장 계수 계산.
+    N_Cr = n - i*k (복소 굴절수 모델)
+    """
+    n_cr = 3.12 + (wl - 380) * (3.18 - 3.12) / (780 - 380)
+    k_cr = 3.25 + (wl - 380) * (4.35 - 3.25) / (780 - 380)
+    return n_cr - 1j * k_cr
+
+def get_refractive_index_aluminum(wl):
+    """
+    Aluminum(알루미늄) 고휘도 반사 미러 전계 전극 기저 굴절 복소 분산값 모델러.
+    """
+    n_al = 0.98 + (wl - 380) * (1.35 - 0.98) / (780 - 380)
+    k_al = 6.45 + (wl - 380) * (7.95 - 6.45) / (780 - 380)
+    return n_al - 1j * k_al
+
+def solve_mems_imod_tmm(wl, air_gap_d, absorber_d=12.0):
+    """
+    수직 입사 전송 행렬법(TMM) 구현 솔버.
+    공기(반 Semi) / 상부 Chromium 흡착 스택 (12nm) / 제어 에어 갭 (d) / 하부 Aluminum 미러 기판
+    """
+    # 전자기파 환경 매질 정의
+    eta_inc = 1.0003  # 공기층 환경 굴절 인덱스
+    eta_sub = get_refractive_index_aluminum(wl)  # 하부 전극 기저 어드미턴스
+    
+    # Chromium 박막 흡수 필름 구조 전달 행렬 (Layer 1)
+    n_cr = get_refractive_index_chromium(wl)
+    delta_1 = (2 * np.pi / wl) * n_cr * absorber_d
+    M1 = np.array([np.cos(delta_1), -1j / n_cr * np.sin(delta_1)],
+        [-1j * n_cr * np.sin(delta_1), np.cos(delta_1)], dtype=complex)
+    
+    # 공기 가동 전이층 제어 공극 전달 행렬 (Layer 2)
+    n_gap = 1.0000
+    delta_2 = (2 * np.pi / wl) * n_gap * air_gap_d
+    M2 = np.array([np.cos(delta_2), -1j / n_gap * np.sin(delta_2)],
+        [-1j * n_gap * np.sin(delta_2), np.cos(delta_2)], dtype=complex)
+    
+    # 결합 합성 전달 행렬 연산
+    M = np.dot(M1, M2)
+    
+    # 계면 연동 임피던스 입력 물리 어드미턴스 산출
+    Y_in = (M + M * eta_sub) / (M + M * eta_sub)
+    
+    # 복소 수직 계면 반사 진폭값 및 최종 에너지 반사율 R(wl) 결정
+    r = (eta_inc - Y_in) / (eta_inc + Y_in)
+    return np.abs(r) ** 2
+
+def wyman_analytic_cmfs(wl):
+    """
+    Chris Wyman - 'Simple Analytic Approximations to the CIE XYZ Color Matching Functions'
+    학술 가우시안 해석 다중 모델 기반 인간 간상 추적 자극 함수식 구현.
+    """
+    # X_bar 근사식 파트
+    tx1 = (wl - 442.0) * (0.0624 if wl < 442.0 else 0.0374)
+    tx2 = (wl - 599.8) * (0.0264 if wl < 599.8 else 0.0323)
+    tx3 = (wl - 501.1) * (0.0490 if wl < 501.1 else 0.0382)
+    x_bar = 0.362 * np.exp(-0.5 * tx1**2) + 1.056 * np.exp(-0.5 * tx2**2) - 0.065 * np.exp(-0.5 * tx3**2)
+    
+    # Y_bar 근사식 파트
+    ty1 = (wl - 568.8) * (0.0213 if wl < 568.8 else 0.0247)
+    ty2 = (wl - 530.9) * (0.0613 if wl < 530.9 else 0.0322)
+    y_bar = 0.821 * np.exp(-0.5 * ty1**2) + 0.286 * np.exp(-0.5 * ty2**2)
+    
+    # Z_bar 근사식 파트
+    tz1 = (wl - 437.0) * (0.0845 if wl < 437.0 else 0.0278)
+    tz2 = (wl - 459.0) * (0.0385 if wl < 459.0 else 0.0725)
+    z_bar = 1.217 * np.exp(-0.5 * tz1**2) + 0.681 * np.exp(-0.5 * tz2**2)
+    
+    return max(0.0, x_bar), max(0.0, y_bar), max(0.0, z_bar)
+
+def get_standard_d65_illuminant(wl):
+    """
+    CIE D65 표준 백색 환경 조명 에너지 강도 분산량 도출.
+    스펙트럼 데이터를 보간법(np.interp)으로 1nm 단위로 변환.
+    """
+    wl_nodes = np.array()
+    s_nodes = np.array([50.0, 82.8, 93.4, 104.8, 117.8, 115.9, 109.4, 104.8, 104.4, 100.0, 95.8, 90.0, 87.7, 83.7, 80.2, 78.3, 71.6, 61.6, 70.3, 46.4, 39.1])
+    return np.interp(wl, wl_nodes, s_nodes)
+
+def convert_reflectance_to_srgb(reflectance_spectrum):
+    """
+    분산 가시 반사 스펙트럼 데이터를 기반으로 표준 CIE 1931 색체 가공을 거쳐 sRGB로 전환.
+    """
+    X, Y, Z = 0.0, 0.0, 0.0
+    N_norm = 0.0
+    
+    for idx, wl in enumerate(WAVELENGTHS):
+        R_val = reflectance_spectrum[idx]
+        S_val = get_standard_d65_illuminant(wl)
+        x_b, y_b, z_b = wyman_analytic_cmfs(wl)
+        
+        X += R_val * S_val * x_b
+        Y += R_val * S_val * y_b
+        Z += R_val * S_val * z_b
+        N_norm += S_val * y_b
+        
+    X /= N_norm
+    Y /= N_norm
+    Z /= N_norm
+    
+    # XYZ -> 표준 선형 RGB 3x3 변환 행렬 전개
+    R_lin =  3.24045 * X - 1.53714 * Y - 0.49853 * Z
+    G_lin = -0.96927 * X + 1.87601 * Y + 0.04156 * Z
+    B_lin =  0.05564 * X - 0.20403 * Y + 1.05723 * Z
+    
+    # 선형 가상 좌표 비선형 표준 sRGB 감마 압축 변조식 정의
+    def apply_gamma(color_val):
+        color_val = np.clip(color_val, 0.0, 1.0)
+        if color_val <= 0.0031308:
+            return 12.92 * color_val
+        else:
+            return 1.055 * (color_val ** (1.0 / 2.4)) - 0.055
+            
+    r_byte = int(round(apply_gamma(R_lin) * 255))
+    g_byte = int(round(apply_gamma(G_lin) * 255))
+    b_byte = int(round(apply_gamma(B_lin) * 255))
+    
+    return r_byte, g_byte, b_byte
+
+# -------------------------------------------------------------------------
+# 물리적 공진 분석 런타임 가동 파트
+# -------------------------------------------------------------------------
+if __name__ == "__main__":
+    # 에어 갭 연속 가변 범위 설정 (50 nm ~ 350 nm 대역, 고해상도 분해)
+    air_gap_range = np.linspace(50, 350, 301)
+    srgb_color_profiles =
+    
+    # 특정 주요 공진 피크 관측 분석용 에어 갭 지점 선정 (청, 녹, 황색 반사 모드)
+    observation_targets = 
+    spectral_profile_capture = {}
+    
+    for gap in air_gap_range:
+        current_spectra = np.array()
+        rgb_tuple = convert_reflectance_to_srgb(current_spectra)
+        srgb_color_profiles.append(rgb_tuple)
+        
+        for target in observation_targets:
+            if abs(gap - target) < 0.5:
+                spectral_profile_capture[target] = (current_spectra, rgb_tuple)
+                
+    # 시각화 배열 패킹 데이터 구성
+    color_bar_data = np.array(srgb_color_profiles) / 255.0
+    color_strip = np.expand_dims(color_bar_data, axis=0)
+    
+    # 2단 차트 생성
+    fig, (ax_top, ax_bottom) = plt.subplots(2, 1, figsize=(11, 8.5), gridspec_kw={'height_ratios': })
+    
+    # 1단: 가시 전파 반사도 곡선 차트 작성
+    state_hex_colors = {100: 'blue', 185: 'green', 260: 'red'}
+    for target_gap in observation_targets:
+        spectrum_data, computed_rgb = spectral_profile_capture[target_gap]
+        ax_top.plot(WAVELENGTHS, spectrum_data, 
+                    label=f"Controlled Air Gap = {target_gap} nm", 
+                    color=state_hex_colors[target_gap], linewidth=3.0)
+        
+    ax_top.set_title("Simulated MEMS IMOD Reflected Spectra vs. Wavelength", fontsize=14, fontweight='bold')
+    ax_top.set_xlabel("Incident Wavelength (nm)", fontsize=11)
+    ax_top.set_ylabel("Specular Reflectance R(λ)", fontsize=11)
+    ax_top.set_xlim(380, 780)
+    ax_top.set_ylim(0, 1.0)
+    ax_top.grid(True, linestyle=':', alpha=0.5)
+    ax_top.legend(loc='upper right', fontsize=10)
+    
+    # 2단: 에어 갭 가변성에 따르는 안구 시각 색체 띠 표출
+    ax_bottom.imshow(color_strip, extent=, aspect='auto')
+    ax_bottom.set_title("Human Perceived Pixel sRGB Color vs. Cavity Air-Gap Thickness", fontsize=14, fontweight='bold')
+    ax_bottom.set_xlabel("MEMS Controlled Air-Gap Thickness (nm)", fontsize=11)
+    ax_bottom.set_yticks()
+    
+    # 핵심 전이 구간 위치 세로 표기
+    for target_gap in observation_targets:
+        ax_bottom.axvline(x=target_gap, color='white', linestyle='--', linewidth=2.0)
+        ax_bottom.text(target_gap, 0.5, f"{target_gap}nm", color='white', weight='bold',
+                       fontsize=10, ha='center', va='center', rotation=90,
+                       bbox=dict(boxstyle="square,pad=0.3", fc="black", alpha=0.6, lw=0))
+        
+    plt.tight_layout()
+    plt.savefig("mems_imod_optical_simulation.png", dpi=300)
+    plt.show()
